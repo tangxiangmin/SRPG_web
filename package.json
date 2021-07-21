@@ -1,0 +1,19 @@
+{
+  "name": "demo",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "vite --port=7362",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^2.1.5"
+  },
+  "dependencies": {
+    "@types/react": "^17.0.14",
+    "classnames": "^2.3.1",
+    "javascript-astar": "^0.4.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}

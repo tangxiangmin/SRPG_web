@@ -1,0 +1,27 @@
+.row {
+    display: flex;
+}
+.cell {
+    width: 30px;
+    height: 30px;
+    margin: 3px;
+    background-color: gray;
+    /*transition: all linear .2s;*/
+}
+.chess {
+    background-color: red !important;
+}
+
+.wall {
+    background-color: #000;
+}
+.mark {
+    background-color: purple;
+}
+.path {
+    background-color: yellow;
+}
+
+.move-range {
+    background-color: blue;
+}
