@@ -1,23 +1,43 @@
 .row {
     display: flex;
 }
+
 .cell {
-    width: 30px;
-    height: 30px;
+    $s: 40px;
+    width: $s;
+    height: $s;
     margin: 3px;
+    line-height: $s;
+    text-align: center;
     background-color: gray;
     /*transition: all linear .2s;*/
 }
+
 .chess {
-    background-color: red !important;
+    &-group-1 {
+        background-color: red;
+    }
+
+    &-group-2 {
+        background-color: green;
+    }
+    &-moved {
+        opacity: 0.6;
+    }
+
+    &-disabled {
+        opacity: 0.3;
+    }
 }
 
 .wall {
     background-color: #000;
 }
+
 .mark {
     background-color: purple;
 }
+
 .path {
     background-color: yellow;
 }
