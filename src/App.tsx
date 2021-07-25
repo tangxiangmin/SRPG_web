@@ -1,12 +1,8 @@
 import {Component} from 'react'
-import {Chessboard, Chess, AIChess, ChessboardEvent} from "./chess";
+import {Chessboard, Chess, AIChess, ChessboardEvent, getCellKey} from "./chess";
 import classNames from "classnames";
 
 import './app.scss'
-
-function getCellKey(x, y) {
-  return `x${x}y${y}`
-}
 
 function sleep(ms = 100) {
   return new Promise((resolve) => {
@@ -35,9 +31,9 @@ const ChessboardView = ({grid, cellMap, onCellClick, onChessClick, onMoveRangeCe
           }
 
           let chessNode = null
-          if(chess) {
-            const { group, isDisabled, isMoved} = chess
-            const cls =classNames({
+          if (chess) {
+            const {group, isDisabled, isMoved} = chess
+            const cls = classNames({
               chess: true,
               ['chess-group-' + group]: true,
               'chess-disabled': isDisabled,
@@ -113,11 +109,13 @@ class App extends Component<any, any> {
 
     const chessboard = new Chessboard(grid)
 
-    const chess1 = new Chess("我方1", 100, 5, 2)
-    const chess2 = new AIChess("敌方1", 100, 5, 3)
-    const chess3 = new AIChess("敌方2", 30, 3, 4)
+    const chess1 = new Chess("亚瑟", 100, 20, 10)
+    const chess4 = new Chess("长枪兵", 50, 10, 6)
+    const chess2 = new AIChess("步兵", 100, 5, 3)
+    const chess3 = new AIChess("侦察兵", 30, 3, 4)
 
     chessboard.addChess(chess1, 0, 2, 1)
+    chessboard.addChess(chess4, 1, 2, 1)
     chessboard.addChess(chess2, 7, 6, 2)
     chessboard.addChess(chess3, 9, 9, 2)
 
@@ -129,6 +127,13 @@ class App extends Component<any, any> {
       }
     })
 
+    // const path = this.chessboard.finPath(0, 2, 5, 2)
+    // console.log(path)
+    //
+    // const path2 = this.chessboard.findTargetAround(5, 2)
+    // console.log(path2)
+
+
     this.renderMap()
   }
 
@@ -137,6 +142,11 @@ class App extends Component<any, any> {
     const chessboard = this.chessboard
     const aiChessList = chessboard.getChessListByGroup(2) as AIChess[]
 
+    if (!aiChessList) {
+      console.log('消灭全部敌人')
+      return
+    }
+
     for (const chess of aiChessList) {
       await sleep(100)
 
@@ -144,12 +154,14 @@ class App extends Component<any, any> {
 
       await sleep(100)
 
-      const {path, canReach} = chess.chooseMoveTarget()
+      const {path, canReach, onTargetPos} = chess.chooseMoveTarget()
 
       if (!canReach) {
         await this.moveChessByPath(chess, path)
+      } else if (onTargetPos) {
+        chess.doAction()
       } else {
-        await this.moveChessByPath(chess, path.slice(0, path.length - 1))
+        await this.moveChessByPath(chess, path)
         await chess.doAction()
       }
     }
@@ -223,8 +235,6 @@ class App extends Component<any, any> {
   showMoveRange = async () => {
     const chess = this.currentChess
     let range = chess.calcChessMoveRange()
-    // const list = range.filter((({x, y}) => x !== chess.x || y !== chess.y))
-
     this.batchMarkCell(range, 'move-range')
   }
 
@@ -290,7 +300,7 @@ class App extends Component<any, any> {
   }
 
   onCellClick = (x, y) => {
-    console.log('onCellClick')
+    console.log('onCellClick', x, y)
     // const {cellMap} = this.state
     // const key = getCellKey(x, y)
     // const {onClick} = cellMap[key]
@@ -303,19 +313,17 @@ class App extends Component<any, any> {
   }
 
   onChessClick = (x, y) => {
-    const {chessList} = this.chessboard
-    for (const chess of chessList) {
-      if (x === chess.x && y === chess.y) {
-        this.currentChess = chess
-        if (!chess.isMoved) {
-          this.showMoveRange()
-        } else if (!chess.isActioned) {
-          this.showActionRange()
-        } else {
-          console.log('当前回合完毕')
-        }
-        return
-      }
+    const chess = this.chessboard.getChessByPos(x, y)
+    if (chess.group !== 1) return
+
+    console.log(chess.name)
+    this.currentChess = chess
+    if (!chess.isMoved) {
+      this.showMoveRange()
+    } else if (!chess.isActioned) {
+      this.showActionRange()
+    } else {
+      console.log('当前回合完毕')
     }
   }
 
@@ -324,20 +332,19 @@ class App extends Component<any, any> {
   }
 
   onAttackRangeCellClick = (x, y) => {
-    if(this.currentChess.isActioned) return
+    if (this.currentChess.isActioned) return
     const target = this.chessboard.getChessByPos(x, y)
     if (target) {
       this.currentChess.attack(target)
     }
+    this.forceUpdate()
   }
-
 
   render() {
     const {chessboard} = this
     const {grid, cellMap} = this.state
     return (<div>
       <h1>回合{chessboard?.roundCount}，当前轮到{chessboard?.currentGroup}组</h1>
-      <button onClick={this.doChessAction}>执行动作</button>
       <button onClick={this.finishRound}>结束回合</button>
       {/*<button onClick={this.showMovePath}>show move path</button>*/}
       <ChessboardView grid={grid}

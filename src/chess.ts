@@ -2,6 +2,10 @@ import {astar, Graph} from 'javascript-astar'
 import EventEmitter from 'EventEmitter'
 
 
+export function getCellKey(x, y) {
+  return `x${x}y${y}`
+}
+
 export enum ChessboardEvent {
   onToggleGroup
 }
@@ -14,6 +18,11 @@ export enum ChessboardEvent {
 //   type: CellType // 元素的位置
 //   chess: Chess
 // }
+
+enum CellType {
+  wall = 0,
+  blank = 1,
+}
 
 export class Chessboard {
   row: number
@@ -81,6 +90,27 @@ export class Chessboard {
     return astar.search(graph, starPosition, endPosition);
   }
 
+  // 找到某个坐标作为可以占据的位置
+  findTargetAround(x, y, chess: Chess): { x: number, y: number }[] {
+    const {row, col, grid} = this
+
+    const insert = (x, y) => {
+      if (x < 0 || x >= row || y < 0 || y >= col) return;
+      if (grid[x][y] === CellType.wall) return
+      const c = this.getChessByPos(x, y)
+      if (c && c !== chess) return // 对应位置有棋子，也无法访问
+
+      ans.push({x, y})
+    }
+
+    let ans = []
+    insert(x - 1, y)
+    insert(x + 1, y)
+    insert(x, y - 1)
+    insert(x, y + 1)
+    return ans
+  }
+
   checkRoundEnd() {
     const list = this.getChessListByGroup(this.currentGroup).filter((chess) => !chess.isDisabled)
     if (list.length === 0) {
@@ -128,13 +158,27 @@ export class Chess {
     return this.isMoved && this.isActioned
   }
 
-  calcRange(moveStep) {
-    if (!this.chessboard) return []
-    const {row, col, grid} = this.chessboard
+  calcRange(moveStep, filter) {
+    const {chessboard} = this
+    if (!chessboard) return []
+    const {row, col, grid} = chessboard
     const {x, y} = this
     const ans = []
     const queue = [{x, y}];
     const visited = {}
+
+    const insert = (x, y) => {
+      if (x < 0 || x >= row || y < 0 || y >= col) return;
+      if (grid[x][y] === CellType.wall) return  // 墙无法参加
+
+      if (filter(x, y)) return
+
+      const key = getCellKey(x, y)
+      if (visited[key]) return
+
+      visited[key] = true
+      queue.push({x, y})
+    }
 
     let step = 0
     let len = queue.length
@@ -158,15 +202,6 @@ export class Chess {
 
     }
 
-    function insert(x, y) {
-      if (x < 0 || x >= row || y < 0 || y >= col) return;
-      if (grid[x][y] === 0) return  // 墙无法参加
-      const key = `x${x}y${y}`
-      if (visited[key]) return
-
-      visited[key] = true
-      queue.push({x, y})
-    }
 
     // 是否返回原始位置
     return ans
@@ -174,12 +209,17 @@ export class Chess {
 
   // 计算移动范围
   calcChessMoveRange() {
-    return this.calcRange(this.moveStep)
+    return this.calcRange(this.moveStep, (x, y) => {
+      const c = this.chessboard.getChessByPos(x, y)
+      if (c && c !== this) return true
+    })
   }
 
   // 计算攻击范围
   calcChessAttackRange() {
-    return this.calcRange(1)
+    return this.calcRange(1, () => {
+      return false
+    })
   }
 
   moveTo(x, y) {
@@ -212,26 +252,16 @@ export class Chess {
 
   doAction() {
     this.isActioned = true
-    console.log(`${this.name} 执行动作`)
-
     if (this.target) {
       this.attack(this.target)
     }
   }
-
-
 }
 
 export class AIChess extends Chess {
-
-  // constructor(name: string, hp: number, damage: number, moveStep: number) {
-  //   super(name, hp, damage, moveStep)
-  //
-  // }
-
   // 计算选择策略并进行操作
   chooseActionTarget() {
-    const moveRange = this.calcChessMoveRange()
+    // const moveRange = this.calcChessMoveRange()
 
     const targetList = this.chessboard.chessList.filter((chess) => {
       if (chess === this) return false // 忽略自己
@@ -262,7 +292,7 @@ export class AIChess extends Chess {
   }
 
   // 找到移动目标位置
-  chooseMoveTarget() {
+  chooseMoveTarget(): { path: any[], canReach: boolean, onTargetPos: boolean } {
     // const moveRange = this.calcChessMoveRange()
     // 找到敌方的棋子
     const list = this.chessboard.chessList.filter(chess => chess.group !== this.group)
@@ -271,15 +301,43 @@ export class AIChess extends Chess {
     // })
     // 确定某个棋子，移动到对应位置
     const target = list[0]
-    if (!target) return {path: [], canReach: false}
+    if (!target) return {path: [], canReach: false, onTargetPos: false}
 
     this.target = target // 设置目标
 
-    const path = this.chessboard.finPath(this.x, this.y, target.x, target.y)
+    const targetAroundList = this.chessboard.findTargetAround(target.x, target.y, this)
+
+    const onTargetAround = targetAroundList.find(({x, y}) => x === this.x && y === this.y)
+    if (onTargetAround) {
+      return {path: [], canReach: true, onTargetPos: true}
+    }
+
+    const findNearestPath = () => {
+      let minPath = []
+      for (let target of targetAroundList) {
+        const path = this.chessboard.finPath(this.x, this.y, target.x, target.y)
+        if (!minPath.length) {
+          minPath = path
+        } else if (path.length && minPath.length > path.length) {
+          minPath = path
+        }
+      }
+      return minPath
+    }
+
+    // 找到最近的一个目标位置
+    const path = findNearestPath()
+
+    if (!path.length) {
+      console.log('no path')
+
+      return {path: [], canReach: false, onTargetPos: false}
+    }
 
     return {
       path: path.slice(0, this.moveStep),
-      canReach: path.length <= this.moveStep
+      canReach: path.length <= this.moveStep,
+      onTargetPos: false
     }
 
     // 策略：返回一个随机的可移动位置

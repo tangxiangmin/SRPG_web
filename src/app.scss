@@ -1,6 +1,7 @@
 .row {
     display: flex;
 }
+
 %tip-cell {
     position: absolute;
     z-index: 2;
@@ -11,6 +12,7 @@
     opacity: 0.2;
 
 }
+
 .cell {
     position: relative;
     $s: 40px;
@@ -28,9 +30,10 @@
 
 
     .move-tip {
-       @extend %tip-cell;
+        @extend %tip-cell;
         background-color: blue;
     }
+
     .attack-tip {
         @extend %tip-cell;
         background-color: red;
@@ -47,6 +50,7 @@
 
     opacity: 1;
     font-size: 12px;
+
     &-group-1 {
         background-color: red;
     }
@@ -54,13 +58,41 @@
     &-group-2 {
         background-color: green;
     }
+
     // todo 区分状态
+    %chess-status {
+        &:after {
+
+        }
+
+    }
+
     &-moved {
-        opacity: 0.6;
+        //opacity: 0.6;
+        &:after {
+            content: '';
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            $s: 10px;
+            width: $s;
+            height: $s;
+            background-color: purple;
+        }
     }
 
     &-disabled {
-        opacity: 0.3;
+        //opacity: 0.6;
+        &:after {
+            content: '';
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            $s: 10px;
+            width: $s;
+            height: $s;
+            background-color: #000;
+        }
     }
 }
 
