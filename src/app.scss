@@ -1,19 +1,52 @@
 .row {
     display: flex;
 }
+%tip-cell {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.2;
 
+}
 .cell {
+    position: relative;
     $s: 40px;
     width: $s;
     height: $s;
     margin: 3px;
-    line-height: $s;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     text-align: center;
     background-color: gray;
     /*transition: all linear .2s;*/
+
+
+    .move-tip {
+       @extend %tip-cell;
+        background-color: blue;
+    }
+    .attack-tip {
+        @extend %tip-cell;
+        background-color: red;
+    }
 }
 
 .chess {
+
+    @extend %tip-cell;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 1;
+    font-size: 12px;
     &-group-1 {
         background-color: red;
     }
@@ -21,6 +54,7 @@
     &-group-2 {
         background-color: green;
     }
+    // todo 区分状态
     &-moved {
         opacity: 0.6;
     }
@@ -43,5 +77,5 @@
 }
 
 .move-range {
-    background-color: blue;
+    //background-color: blue;
 }

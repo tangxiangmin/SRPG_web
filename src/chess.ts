@@ -6,6 +6,15 @@ export enum ChessboardEvent {
   onToggleGroup
 }
 
+// type CellType = number
+//
+// export class Cell {
+//   x: number
+//   y: number
+//   type: CellType // 元素的位置
+//   chess: Chess
+// }
+
 export class Chessboard {
   row: number
   col: number
@@ -38,6 +47,30 @@ export class Chessboard {
     this.chessList.push(chess)
   }
 
+  // 移动棋子
+  moveChess(chess: Chess, x: number, y: number) {
+    chess.x = x
+    chess.y = y
+    chess.isMoved = true
+
+    // this.checkRoundEnd()
+  }
+
+  // 删除棋子
+  removeChess(chess) {
+    this.chessList = this.chessList.filter(c => c !== chess)
+  }
+
+  // 查找棋子
+  getChessByPos(x, y) {
+    return this.chessList.find(chess => chess.x === x && chess.y === y)
+  }
+
+  getChessListByGroup(group) {
+    return this.chessList.filter(chess => chess.group === group)
+  }
+
+  // 一些工具方法
   finPath(x0, y0, x1, y1) {
     // 找到最短的路径
     const {graph} = this
@@ -46,14 +79,6 @@ export class Chessboard {
     const endPosition = graph.grid[x1][y1];
 
     return astar.search(graph, starPosition, endPosition);
-  }
-
-  moveChess(chess: Chess, x: number, y: number) {
-    chess.x = x
-    chess.y = y
-    chess.isMoved = true
-
-    // this.checkRoundEnd()
   }
 
   checkRoundEnd() {
@@ -76,9 +101,6 @@ export class Chessboard {
     this.bus.emit(ChessboardEvent.onToggleGroup)
   }
 
-  getChessListByGroup(group) {
-    return this.chessList.filter(chess => chess.group === group)
-  }
 }
 
 export class Chess {
@@ -106,12 +128,10 @@ export class Chess {
     return this.isMoved && this.isActioned
   }
 
-
-  calcChessMoveRange() {
+  calcRange(moveStep) {
     if (!this.chessboard) return []
-
     const {row, col, grid} = this.chessboard
-    const {x, y, moveStep} = this
+    const {x, y} = this
     const ans = []
     const queue = [{x, y}];
     const visited = {}
@@ -152,10 +172,15 @@ export class Chess {
     return ans
   }
 
-  calcChessAttackRange() {
-
+  // 计算移动范围
+  calcChessMoveRange() {
+    return this.calcRange(this.moveStep)
   }
 
+  // 计算攻击范围
+  calcChessAttackRange() {
+    return this.calcRange(1)
+  }
 
   moveTo(x, y) {
     const path = this.chessboard.finPath(this.x, this.y, x, y)
@@ -168,16 +193,33 @@ export class Chess {
     console.log(
       `${this.name}攻击${chess.name}，造成${this.damage}点伤害，${chess.name}剩余血量${chess.hp}`
     );
+
+    chess.onAttack(this)
+
+    this.isActioned = true
+  }
+
+  onAttack(chess) {
+    // todo 是否能反击
+    if (this.hp <= 0) {
+      this.onDie()
+    }
+  }
+
+  onDie() {
+    this.chessboard.removeChess(this)
   }
 
   doAction() {
     this.isActioned = true
     console.log(`${this.name} 执行动作`)
 
-    if(this.target) {
+    if (this.target) {
       this.attack(this.target)
     }
   }
+
+
 }
 
 export class AIChess extends Chess {
@@ -196,14 +238,14 @@ export class AIChess extends Chess {
 
       return true
 
-      // 找到在移动范围内的元素 先二次循环查找一下
-      for (const cell of moveRange) {
-        if (chess.x === cell.x && chess.y === cell.y) {
-          return true
-        }
-      }
-
-      return false
+      // // 找到在移动范围内的元素 先二次循环查找一下
+      // for (const cell of moveRange) {
+      //   if (chess.x === cell.x && chess.y === cell.y) {
+      //     return true
+      //   }
+      // }
+      //
+      // return false
     })
 
     // todo 使用一个概率函数，选择动作策略

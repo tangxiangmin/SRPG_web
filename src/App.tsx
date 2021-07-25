@@ -14,24 +14,62 @@ function sleep(ms = 100) {
   })
 }
 
-const ChessboardView = ({grid, cellMap, onCellClick}) => {
+const ChessboardView = ({grid, cellMap, onCellClick, onChessClick, onMoveRangeCellClick, onAttackRangeCellClick}) => {
   const list = grid.map((row, x) => {
     return (<div className="row" key={x}>
       {
         row.map((cell, y) => {
           const key = getCellKey(x, y)
           const config = cellMap[key] || {}
-          const configCls = config.cls
+          const {cls: configCls, chess} = config
           const cls = {
             cell: true,
           }
+
           if (configCls) {
             cls[configCls] = true
           }
+
           const onClick = () => {
             return onCellClick(x, y, configCls)
           }
-          return <div className={classNames(cls)} onClick={onClick} key={y}>({x},{y})</div>
+
+          let chessNode = null
+          if(chess) {
+            const { group, isDisabled, isMoved} = chess
+            const cls =classNames({
+              chess: true,
+              ['chess-group-' + group]: true,
+              'chess-disabled': isDisabled,
+              'chess-moved': isMoved,
+            })
+            chessNode = <span className={cls} onClick={(e) => {
+              onChessClick(x, y)
+              e.stopPropagation()
+            }}>{chess.name} <br/>{chess.hp}</span>
+          }
+
+          const moveRangeNode = configCls && configCls.indexOf('move-range') > -1
+            ? <span className="move-tip" onClick={(e) => {
+              onMoveRangeCellClick(x, y)
+              e.stopPropagation()
+            }}/>
+            : null
+
+          const attackRangeNode = configCls && configCls.indexOf('attack-range') > -1
+            ? <span className="attack-tip" onClick={(e) => {
+              onAttackRangeCellClick(x, y)
+              e.stopPropagation()
+            }}/>
+            : null
+
+          return <div className={classNames(cls)} onClick={onClick} key={y}>
+            <span>({x},{y})</span>
+            {chessNode}
+            {moveRangeNode}
+            {attackRangeNode}
+
+          </div>
         })
       }
     </div>)
@@ -114,16 +152,6 @@ class App extends Component<any, any> {
         await this.moveChessByPath(chess, path.slice(0, path.length - 1))
         await chess.doAction()
       }
-
-
-      // const actionTarget = chess.chooseActionTarget()
-      //
-      // if (actionTarget) {
-      //   console.log('todo 执行动作')
-      // } else {
-      //   const moveTarget = chess.chooseMoveTarget()
-      //   await this.moveCurrentChess(moveTarget.x, moveTarget.y)
-      // }
     }
 
     this.finishRound()
@@ -147,16 +175,14 @@ class App extends Component<any, any> {
     })
 
     chessboard.chessList.forEach(chess => {
-      const {x, y, group, isDisabled, isMoved} = chess
+      const {x, y} = chess
       const key = getCellKey(x, y)
 
-      cellMap[key].cls = classNames({
-        chess: true,
-        ['chess-group-' + group]: true,
-        'chess-disabled': isDisabled,
-        'chess-moved': isMoved,
-      })
-      cellMap[key].onClick = this.onChessClick
+      cellMap[key] = {
+        ...cellMap[key],
+        cls: '',
+        chess: chess
+      }
     })
 
     this.setState({
@@ -193,33 +219,21 @@ class App extends Component<any, any> {
   //   this.markCell(x, y, 'none')
   // }
 
-  onChessClick = (x, y) => {
-    const {chessList} = this.chessboard
-    for (const chess of chessList) {
-      if (x === chess.x && y === chess.y) {
-        this.currentChess = chess
-        if (!chess.isDisabled) {
-          this.showMoveRange()
-        } else {
-          console.log('已经移动')
-        }
-        return
-      }
-    }
-  }
 
   showMoveRange = async () => {
-    const {cellMap} = this.state
     const chess = this.currentChess
     let range = chess.calcChessMoveRange()
+    // const list = range.filter((({x, y}) => x !== chess.x || y !== chess.y))
+
+    this.batchMarkCell(range, 'move-range')
+  }
+
+  showActionRange = () => {
+    const chess = this.currentChess
+    let range = chess.calcChessAttackRange()
     const list = range.filter((({x, y}) => x !== chess.x || y !== chess.y))
 
-    list.forEach(({x, y}) => {
-      const key = getCellKey(x, y)
-      cellMap[key].onClick = this.moveCurrentChess
-    })
-
-    this.batchMarkCell(list, 'move-range')
+    this.batchMarkCell(list, 'attack-range')
   }
 
   // showMovePath = async (path) => {
@@ -232,6 +246,12 @@ class App extends Component<any, any> {
 
   moveCurrentChess = async (x, y) => {
     const {x: x0, y: y0} = this.currentChess
+    // 原始位置
+    if (x0 === x && y0 === y) {
+      this.currentChess.isMoved = true
+      this.renderMap()
+      return
+    }
     const path = this.chessboard.finPath(x0, y0, x, y)
     // let range = this.currentChess.calcChessMoveRange()
     // 清除移动范围
@@ -244,9 +264,8 @@ class App extends Component<any, any> {
     //
     // await sleep(200)
     // 展示移动动画
-    const chess = this.currentChess
 
-    this.moveChessByPath(chess, path)
+    this.moveChessByPath(this.currentChess, path)
   }
   moveChessByPath = async (chess, path) => {
     for (const node of path) {
@@ -259,27 +278,59 @@ class App extends Component<any, any> {
     }
   }
 
-  onCellClick = (x, y) => {
-    const {cellMap} = this.state
-    const key = getCellKey(x, y)
-    const {onClick} = cellMap[key]
-
-    if (onClick) {
-      onClick(x, y)
-    } else {
-      console.error(`${key}对应的handler不存在`)
-    }
-  }
-
   doChessAction = () => {
     this.currentChess.doAction()
     this.renderMap()
+    this.forceUpdate()
   }
 
   finishRound = () => {
     this.chessboard.toggleGroup()
     this.renderMap()
   }
+
+  onCellClick = (x, y) => {
+    console.log('onCellClick')
+    // const {cellMap} = this.state
+    // const key = getCellKey(x, y)
+    // const {onClick} = cellMap[key]
+    //
+    // if (onClick) {
+    //   onClick(x, y)
+    // } else {
+    //   console.log(`${key}对应的handler不存在`)
+    // }
+  }
+
+  onChessClick = (x, y) => {
+    const {chessList} = this.chessboard
+    for (const chess of chessList) {
+      if (x === chess.x && y === chess.y) {
+        this.currentChess = chess
+        if (!chess.isMoved) {
+          this.showMoveRange()
+        } else if (!chess.isActioned) {
+          this.showActionRange()
+        } else {
+          console.log('当前回合完毕')
+        }
+        return
+      }
+    }
+  }
+
+  onMoveRangeCellClick = (x, y) => {
+    this.moveCurrentChess(x, y)
+  }
+
+  onAttackRangeCellClick = (x, y) => {
+    if(this.currentChess.isActioned) return
+    const target = this.chessboard.getChessByPos(x, y)
+    if (target) {
+      this.currentChess.attack(target)
+    }
+  }
+
 
   render() {
     const {chessboard} = this
@@ -289,7 +340,13 @@ class App extends Component<any, any> {
       <button onClick={this.doChessAction}>执行动作</button>
       <button onClick={this.finishRound}>结束回合</button>
       {/*<button onClick={this.showMovePath}>show move path</button>*/}
-      <ChessboardView grid={grid} cellMap={cellMap} onCellClick={this.onCellClick}/>
+      <ChessboardView grid={grid}
+                      cellMap={cellMap}
+                      onCellClick={this.onCellClick}
+                      onChessClick={this.onChessClick}
+                      onMoveRangeCellClick={this.onMoveRangeCellClick}
+                      onAttackRangeCellClick={this.onAttackRangeCellClick}
+      />
     </div>)
   }
 }
