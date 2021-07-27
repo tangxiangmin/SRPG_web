@@ -7,14 +7,20 @@
     "serve": "vite preview"
   },
   "devDependencies": {
-    "vite": "^2.1.5"
+    "@vitejs/plugin-vue": "^1.2.5",
+    "@vitejs/plugin-vue-jsx": "^1.1.6",
+    "@vue/compiler-sfc": "^3.0.5",
+    "vite": "^2.4.3"
   },
   "dependencies": {
     "@types/react": "^17.0.14",
     "EventEmitter": "^1.0.0",
     "classnames": "^2.3.1",
+    "element-plus": "^1.0.2-beta.62",
     "javascript-astar": "^0.4.1",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "vue": "^3.0.5",
+    "vue-router": "^4.0.10"
   }
 }
