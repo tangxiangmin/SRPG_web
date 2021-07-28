@@ -1,8 +1,8 @@
 <template>
   <div :class="cls">
-    ({{ x }},{{ y }})
-    <span :class="chessCls" @click="onChessClick(x,y)" v-if="chess">
-      {{ chess.name }} <br/>{{ chess.hp }}
+<!--    ({{ x }},{{ y }})-->
+    <span :class="chessCls" @click="onChessClick(x,y)" v-if="chess" :style="chessStyle">
+<!--      {{ chess.name }} <br/>{{ chess.hp }}-->
     </span>
     <span class="move-tip" @click="onMoveRangeCellClick(x,y)" v-if="isMoveTip"></span>
     <span class="attack-tip" @click="onAttackRangeCellClick(x,y)" v-if="isAttackRange"></span>
@@ -12,17 +12,20 @@
 <script>
 import {computed, onUpdated, toRefs, watchEffect, watch} from "vue";
 
-import {getCellKey} from "../../core/Chessboard";
+import {getCellKey, CellType} from "../../core/Chessboard";
 
 export default {
   name: "cell.vue",
-  props: ['cellMap', 'onCellClick', 'onChessClick', 'onMoveRangeCellClick', 'onAttackRangeCellClick', 'x', 'y'],
+  props: ['value', 'cellMap', 'moveRange', 'attackRange',
+    'onCellClick', 'onChessClick', 'onMoveRangeCellClick', 'onAttackRangeCellClick', 'x', 'y'],
   setup(props) {
-    const {cellMap, x, y} = toRefs(props)
+    const {cellMap, moveRange, attackRange, x, y} = toRefs(props)
 
+    const key = computed(() => {
+      return getCellKey(x.value, y.value)
+    })
     const config = computed(() => {
-      const key = getCellKey(x.value, y.value)
-      return cellMap.value[key] || {}
+      return cellMap.value[key.value] || {}
     })
 
     const chess = computed(() => {
@@ -34,6 +37,7 @@ export default {
 
       const ans = {
         cell: true,
+        [`cell-` + props.value]: true
       }
       if (configCls) {
         ans[configCls] = true
@@ -51,20 +55,25 @@ export default {
         'chess-moved': isMoved,
       }
     })
+    const chessStyle = computed(() => {
+      if (!chess.value) return
+      const {frame} = chess.value
+      return {
+        backgroundImage: `url('${frame}')`
+      }
+    })
 
     const isMoveTip = computed(() => {
-      const {cls: configCls} = config.value
-      return configCls && configCls.indexOf('move-range') > -1
+      return moveRange.value[key.value]
     })
 
     const isAttackRange = computed(() => {
-      const {cls: configCls} = config.value
-      return configCls && configCls.indexOf('attack-range') > -1
+      return attackRange.value[key.value]
     })
 
     return {
       cls,
-      chessCls,
+      chessCls, chessStyle,
       chess,
       isMoveTip, isAttackRange
     }
@@ -89,25 +98,36 @@ export default {
   $s: 40px;
   width: $s;
   height: $s;
-  margin: 3px;
+  //margin: 3px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   text-align: center;
-  background-color: gray;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   /*transition: all linear .2s;*/
 
 
   .move-tip {
     @extend %tip-cell;
-    background-color: blue;
+    background-color: yellow;
   }
 
   .attack-tip {
     @extend %tip-cell;
     background-color: red;
+  }
+
+  // todo 改成配置项
+  &-0 {
+    background-image: url('../../assets/map/tile_2.png');
+  }
+
+  &-1 {
+    background-image: url('../../assets/map/tile_1.png');
   }
 }
 
@@ -121,21 +141,15 @@ export default {
 
   opacity: 1;
   font-size: 12px;
-
-  &-group-1 {
-    background-color: red;
-  }
-
-  &-group-2 {
-    background-color: green;
-  }
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
 
   // todo 区分状态
   %chess-status {
     &:after {
 
     }
-
   }
 
   &-moved {
@@ -167,20 +181,9 @@ export default {
   }
 }
 
-.wall {
-  background-color: #000;
-}
-
-.mark {
-  background-color: purple;
-}
 
 .path {
   background-color: yellow;
-}
-
-.move-range {
-  //background-color: blue;
 }
 
 </style>

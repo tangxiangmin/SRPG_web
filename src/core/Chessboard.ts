@@ -1,5 +1,5 @@
-import EventEmitter from 'EventEmitter'
 import {astar, Graph} from 'javascript-astar'
+import EventBus from './EventBus'
 
 import {Chess} from "./Chess"
 
@@ -16,42 +16,20 @@ export enum CellType {
   blank = 1,
 }
 
-class EventBus {
-  eventMap: {
-    [prop: string]: Array<Function>
-  } = {}
-
-
-  on(type, handler) {
-    if (!Array.isArray(this.eventMap[type])) {
-      this.eventMap[type] = []
-    }
-    this.eventMap[type].push(handler)
-  }
-
-  emit(type, data?) {
-    const handlers = this.eventMap[type]
-    if (Array.isArray(handlers)) {
-      handlers.forEach(handler => {
-        handler(data)
-      })
-    }
-
-  }
-}
-
 export default class Chessboard {
   row: number
   col: number
   grid: number[][]
+  map: number[][]
   chessList: Chess[] = []
   roundCount: number = 1
   currentGroup: number = 1 // 当前回合的用户
 
   bus: EventBus
 
-  constructor(grid) {
+  constructor(grid, map) {
     this.grid = grid
+    this.map = map
     this.row = grid.length
     this.col = grid[0]?.length ?? 0
 
@@ -93,7 +71,8 @@ export default class Chessboard {
   finPath(x0, y0, x1, y1) {
     // 找到最短的路径
     const {grid, row, col} = this
-    let temp = []
+
+    let weightGrid = [] // 计算权重
     // 计算
     for (let x = 0; x < row; ++x) {
       let row = []
@@ -102,16 +81,17 @@ export default class Chessboard {
         // 有棋子的地方无法经过
         const chess = this.getChessByPos(x, y)
         if (chess) {
-          row.push(CellType.wall) // todo 看看是否需要调整为其他专门的类型
-          console.log({x,y})
+          // todo 看看是否需要调整为其他专门的类型
+          // todo 同组的棋子看看是否可以忽略障碍
+          row.push(CellType.wall)
         } else {
           row.push(cell)
         }
       }
-      temp.push(row)
+      weightGrid.push(row)
     }
 
-    const graph = new Graph(temp)
+    const graph = new Graph(weightGrid)
 
 
     const starPosition = graph.grid[x0][y0];
@@ -154,8 +134,7 @@ export default class Chessboard {
     this.roundCount++
     this.currentGroup = this.currentGroup === 1 ? 2 : 1
     this.getChessListByGroup(this.currentGroup).forEach(chess => {
-      chess.isMoved = false
-      chess.isActioned = false
+      chess.resetOnRound()
     })
 
     this.bus.emit(ChessboardEvent.onToggleGroup)

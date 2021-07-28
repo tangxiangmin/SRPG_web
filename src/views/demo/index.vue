@@ -2,24 +2,36 @@
 
   <div>
     <button @click="stage.finishRound">结束回合</button>
-    <div class="chessboard">
-      <div class="row" v-for="(row,x) in stage.chessboard.grid" :key="x">
-        <Cell v-for="(col,y) in row" :x="x" :y="y"
-              :key="y"
-              :cellMap="stage.cellMap"
-              :onCellClick="onCellClick"
-              :onChessClick="onChessClick"
-              :onMoveRangeCellClick="onMoveRangeCellClick"
-              :onAttackRangeCellClick="onAttackRangeCellClick"
-        />
+    <div class="screen">
+      <div class="chessboard">
+        <div class="row" v-for="(row,x) in stage.chessboard.grid" :key="x">
+          <Cell v-for="(col,y) in row" :x="x" :y="y"
+                :key="y"
+                :value="stage.chessboard.map[x][y]"
+                :cellMap="stage.cellMap"
+                :moveRange="stage.currentMoveRange"
+                :attackRange="stage.currentAttackRange"
+                :onCellClick="onCellClick"
+                :onChessClick="onChessClick"
+                :onMoveRangeCellClick="onMoveRangeCellClick"
+                :onAttackRangeCellClick="onAttackRangeCellClick"
+          />
+        </div>
+      </div>
+      <div class="profile" v-if="currentChess">
+        {{ currentChess.name }} <br>
+        HP: {{ currentChess.hp }} <br>
+        伤害: {{ currentChess.damage }} <br>
       </div>
     </div>
+
   </div>
 </template>
 
 <script lang="ts">
-import {ref, watch, reactive} from 'vue'
-import {AIChess, Chess} from "../../core/Chess"
+import {ref, watch, reactive, computed} from 'vue'
+import {Chess} from "../../core/Chess"
+import {AIChess} from '../../core/AIChess'
 import {Stage} from "../../core/Stage"
 import Chessboard, {ChessboardEvent} from "../../core/Chessboard"
 
@@ -28,9 +40,9 @@ import Cell from './cell.vue'
 import {getConfig, getChessDetailById} from '../config/temp'
 
 function initStage() {
-  const {grid, chessList} = getConfig()
+  const {grid, chessList, map} = getConfig()
 
-  const chessboard = new Chessboard(grid)
+  const chessboard = new Chessboard(grid, map)
 
   chessList.forEach(chessConfig => {
     const {chessId, x, y, group} = chessConfig
@@ -39,12 +51,12 @@ function initStage() {
       console.error(`${chessId}不存在配置`)
       return
     }
-    const {name, hp, damage, moveStep} = chess
+    const {name, hp, damage, moveStep, attackDistance, frame} = chess
     let c
     if (group === 1) {
-      c = new Chess(name, hp, damage, moveStep)
+      c = new Chess(name, hp, damage, moveStep, attackDistance, frame)
     } else {
-      c = new AIChess(name, hp, damage, moveStep)
+      c = new AIChess(name, hp, damage, moveStep, attackDistance, frame)
     }
 
     chessboard.addChess(c, x, y, group)
@@ -60,6 +72,10 @@ export default {
     const instance = initStage()
 
     const stage = reactive(instance)
+
+    const currentChess = computed(() => {
+      return stage.currentChess
+    })
 
     const onCellClick = (x, y) => {
       stage.onCellClick(x, y)
@@ -84,6 +100,7 @@ export default {
 
     return {
       stage,
+      currentChess,
       onCellClick, onChessClick, onMoveRangeCellClick, onAttackRangeCellClick
     }
   }
@@ -93,5 +110,13 @@ export default {
 <style scoped lang="scss">
 .row {
   display: flex;
+}
+
+.screen {
+  display: flex;
+}
+
+.profile {
+  margin-left: 20px;
 }
 </style>

@@ -1,6 +1,7 @@
 import Chessboard, {ChessboardEvent, getCellKey, CellType} from './Chessboard'
 
-import {AIChess, Chess} from "./Chess";
+import {Chess} from "./Chess";
+import {AIChess} from './AIChess'
 
 function sleep(ms = 100) {
   return new Promise((resolve) => {
@@ -13,19 +14,20 @@ export class Stage {
   chessboard: Chessboard
   cellMap: any
   currentChess: Chess
+  currentMoveRange: any
+  currentAttackRange: any
 
   constructor(chessboard: Chessboard) {
     this.chessboard = chessboard
-
-    // FIXME 使用箭头函数绑定会导致无法通过Proxy访问到数据，导致无法进行依赖收集，出现更新异常
-    // this.chessboard.bus.on(ChessboardEvent.onToggleGroup, this.onAIRound.bind(this))
+    this.currentMoveRange = {}
+    this.currentAttackRange = {}
 
     this.renderMap()
   }
 
   // 电脑回合
   async onAIRound() {
-    if (this.chessboard.currentGroup === 1)  return
+    if (this.chessboard.currentGroup === 1) return
 
     const aiChessList = this.chessboard.getChessListByGroup(2) as AIChess[]
 
@@ -55,22 +57,10 @@ export class Stage {
     this.finishRound()
   }
 
-  // 计算棋盘状态，重新绘制
+  // 计算棋盘状态，重新绘制 todo 优化逻辑
   renderMap() {
-    const {grid} = this.chessboard
     const cellMap = {}
     const {chessboard} = this
-
-    grid.forEach((row, x) => {
-      row.map((cell, y) => {
-        const key = getCellKey(x, y)
-
-        cellMap[key] = {} // todo 定义每个cell的类型
-        if (cell === CellType.wall) {
-          cellMap[key].cls = 'wall'
-        }
-      })
-    })
 
     chessboard.chessList.forEach(chess => {
       const {x, y} = chess
@@ -86,27 +76,18 @@ export class Stage {
     this.cellMap = cellMap
   }
 
-
-  batchMarkCell(list, cls) {
-    const {cellMap} = this
-    list.forEach(({x, y}) => {
-      const key = getCellKey(x, y)
-      cellMap[key].cls = cls
-    })
-
-    this.cellMap = {...cellMap}
-    // this.cellMap = {...cellMap}
-  }
-
-  // clearCell = (x, y) => {
-  //   this.markCell(x, y, 'none')
-  // }
-
-
   showMoveRange() {
     const chess = this.currentChess
     let range = chess.calcChessMoveRange()
-    this.batchMarkCell(range, 'move-range')
+
+    this.currentMoveRange = range.reduce((acc, cell) => {
+      const {x, y} = cell
+      const key = getCellKey(x, y)
+      acc[key] = true
+      return acc
+    }, {})
+
+    this.renderMap()
   }
 
   showActionRange() {
@@ -114,7 +95,14 @@ export class Stage {
     let range = chess.calcChessAttackRange()
     const list = range.filter((({x, y}) => x !== chess.x || y !== chess.y))
 
-    this.batchMarkCell(list, 'attack-range')
+    this.currentAttackRange = list.reduce((acc, cell) => {
+      const {x, y} = cell
+      const key = getCellKey(x, y)
+      acc[key] = true
+      return acc
+    }, {})
+
+    this.renderMap()
   }
 
   // showMovePath = async (path) => {
@@ -135,12 +123,10 @@ export class Stage {
     }
   }
 
-  doChessAction() {
-    this.currentChess.doAction()
-    this.renderMap()
-  }
-
   finishRound() {
+    this.currentMoveRange = {}
+    this.currentAttackRange = {}
+
     this.chessboard.toggleGroup()
     this.renderMap()
   }
@@ -160,21 +146,21 @@ export class Stage {
 
   onChessClick(x, y) {
     const chess = this.chessboard.getChessByPos(x, y)
-    if (chess.group !== 1) return
-
     this.currentChess = chess
+
+    if (chess.group !== 1) return
 
     if (!chess.isMoved) {
       this.showMoveRange()
     } else if (!chess.isActioned) {
       this.showActionRange()
     } else {
-      console.log('当前回合完毕')
+      console.log('本回合该棋子操作完毕')
     }
   }
 
   onMoveRangeCellClick(x, y) {
-
+    this.currentMoveRange = {}
     const {x: x0, y: y0} = this.currentChess
     // 原始位置
     if (x0 === x && y0 === y) {
@@ -182,11 +168,10 @@ export class Stage {
       this.renderMap()
       return
     }
+
     const path = this.chessboard.finPath(x0, y0, x, y)
     // let range = this.currentChess.calcChessMoveRange()
     // 清除移动范围
-    // this.batchMarkCell(range, 'none')
-
     // await sleep(200)
 
     // 展示移动路径
@@ -199,10 +184,13 @@ export class Stage {
   }
 
   onAttackRangeCellClick(x, y) {
+    this.currentAttackRange = {}
+
     if (this.currentChess.isActioned) return
     const target = this.chessboard.getChessByPos(x, y)
     if (target) {
       this.currentChess.attack(target)
     }
+    this.renderMap()
   }
 }
