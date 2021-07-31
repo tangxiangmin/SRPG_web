@@ -1,13 +1,8 @@
-import Chessboard, {ChessboardEvent, getCellKey, CellType} from './Chessboard'
+import Chessboard, {getCellKey} from './Chessboard'
 
 import {Chess} from "./Chess";
 import {AIChess} from './AIChess'
-
-function sleep(ms = 100) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
+import {sleep} from "../util";
 
 // 负责管理流程和动画等功能
 export class Stage {
@@ -78,6 +73,7 @@ export class Stage {
 
   showMoveRange() {
     const chess = this.currentChess
+    if (chess.isMoved) return
     let range = chess.calcChessMoveRange()
 
     this.currentMoveRange = range.reduce((acc, cell) => {
@@ -92,6 +88,8 @@ export class Stage {
 
   showActionRange() {
     const chess = this.currentChess
+    if (chess.isActioned) return
+
     let range = chess.calcChessAttackRange()
     const list = range.filter((({x, y}) => x !== chess.x || y !== chess.y))
 
@@ -183,13 +181,22 @@ export class Stage {
     this.moveChessByPath(this.currentChess, path)
   }
 
-  onAttackRangeCellClick(x, y) {
+  onAttackRangeCellClick(x, y, Skill) {
     this.currentAttackRange = {}
 
     if (this.currentChess.isActioned) return
+
     const target = this.chessboard.getChessByPos(x, y)
+
     if (target) {
-      this.currentChess.attack(target)
+      if(Skill) {
+        const skill = new Skill()
+        this.currentChess.useSkill(skill, target)
+      }else {
+        this.currentChess.attack(target)
+        // todo 判断方向
+        this.currentChess.attackDir = 1
+      }
     }
     this.renderMap()
   }

@@ -50,6 +50,6 @@ export default {
   justify-content: center;
 
   text-align: center;
-  background-color: #fff;
+  background-color: gray;
 }
 </style>

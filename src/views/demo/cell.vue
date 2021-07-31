@@ -1,6 +1,6 @@
 <template>
-  <div :class="cls">
-<!--    ({{ x }},{{ y }})-->
+  <div :class="cellCls" :style="cellStyle">
+    <!--    ({{ x }},{{ y }})-->
     <span :class="chessCls" @click="onChessClick(x,y)" v-if="chess" :style="chessStyle">
 <!--      {{ chess.name }} <br/>{{ chess.hp }}-->
     </span>
@@ -10,13 +10,14 @@
 </template>
 
 <script>
-import {computed, onUpdated, toRefs, watchEffect, watch} from "vue";
+import {computed, toRefs} from "vue";
 
 import {getCellKey, CellType} from "../../core/Chessboard";
+import {getCellDetailById} from "../config/temp";
 
 export default {
   name: "cell.vue",
-  props: ['value', 'cellMap', 'moveRange', 'attackRange',
+  props: ['type', 'cellMap', 'moveRange', 'attackRange',
     'onCellClick', 'onChessClick', 'onMoveRangeCellClick', 'onAttackRangeCellClick', 'x', 'y'],
   setup(props) {
     const {cellMap, moveRange, attackRange, x, y} = toRefs(props)
@@ -32,12 +33,11 @@ export default {
       return config.value?.chess
     })
 
-    const cls = computed(() => {
+    const cellCls = computed(() => {
       const {cls: configCls} = config.value
 
       const ans = {
         cell: true,
-        [`cell-` + props.value]: true
       }
       if (configCls) {
         ans[configCls] = true
@@ -45,14 +45,26 @@ export default {
       return ans
     })
 
+    const cellStyle = computed(() => {
+      const id = props.type
+      const cell = getCellDetailById(id)
+      if(!cell) return {}
+      const {frame} = cell
+      return {
+        backgroundImage: `url('${frame}')`
+      }
+    })
+
     const chessCls = computed(() => {
       if (!chess.value) return
-      const {group, isDisabled, isMoved} = chess.value
+      const {group, isDisabled, isMoved, attackDir} = chess.value
       return {
         chess: true,
         ['chess-group-' + group]: true,
         'chess-disabled': isDisabled,
         'chess-moved': isMoved,
+        ['chess-attack-' + attackDir]: attackDir
+        // ['chess-attack-1']: true
       }
     })
     const chessStyle = computed(() => {
@@ -72,7 +84,7 @@ export default {
     })
 
     return {
-      cls,
+      cellCls, cellStyle,
       chessCls, chessStyle,
       chess,
       isMoveTip, isAttackRange
@@ -91,6 +103,18 @@ export default {
   height: 100%;
   opacity: 0.2;
 
+}
+
+@keyframes attack-1 {
+  from {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(50%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .cell {
@@ -119,15 +143,6 @@ export default {
   .attack-tip {
     @extend %tip-cell;
     background-color: red;
-  }
-
-  // todo 改成配置项
-  &-0 {
-    background-image: url('../../assets/map/tile_2.png');
-  }
-
-  &-1 {
-    background-image: url('../../assets/map/tile_1.png');
   }
 }
 
@@ -178,6 +193,11 @@ export default {
       height: $s;
       background-color: #000;
     }
+  }
+
+  // 攻击动画
+  &-attack-1 {
+    animation: attack-1 .3s linear;
   }
 }
 

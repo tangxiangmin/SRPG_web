@@ -1,6 +1,7 @@
+import {Target} from "./skill/Target";
 import Chessboard, {CellType, getCellKey} from './Chessboard'
 
-export class Chess {
+export class Chess extends Target {
   name: string
   x: number
   y: number
@@ -17,9 +18,12 @@ export class Chess {
   chessboard: Chessboard
   group: number
   target: Chess
+  attackDir: number = 0
 
+  // todo 把攻击和技能相关的逻辑交给Target对象
+  constructor(name: string, hp: number, damage: number, moveStep: number, attackDistance: number, frame: string) {
+    super({hp, mp: 10, frame, atk: damage, speed: moveStep})
 
-  constructor(name: string, hp: number, damage: number, moveStep: number, attackDistance: number, frame:string) {
     this.name = name;
 
     this.hp = hp; // 生命值
