@@ -32,18 +32,16 @@
         <button @click="stage.showMoveRange" :disabled="currentChess.isMoved">移动</button>
         <button @click="stage.showActionRange" :disabled="currentChess.isActioned">攻击</button>
         <button @click="stage.endChessInRound" :disabled="currentChess.isDisabled">待定</button>
-<!--        <button>使用技能</button>-->
+        <!--        <button>使用技能</button>-->
         <div>
           技能列表 <br>
-          <button :disabled="currentChess.isActioned" v-for="(skill,index) in skillList" :key="index"
+          <button :disabled="currentChess.isActioned" v-for="(skill,index) in currentChess.skillList" :key="index"
                   :class="{'skill-select':currentSkill === skill}"
                   @click="useSkill(skill)">{{ skill.name }}
           </button>
         </div>
-
       </div>
     </div>
-
   </div>
 </template>
 
@@ -53,16 +51,12 @@ import {Chess} from "../../core/Chess"
 import {AIChess} from '../../core/AIChess'
 import {Stage} from "../../core/Stage"
 import Chessboard, {ChessboardEvent} from "../../core/Chessboard"
-import {ChangeSheepSkill, RecoverSkill, PoisoningSkill} from "../../core/skill/Skill";
 
 import Cell from './cell.vue'
 
-import {getConfig, getChessDetailById} from '../config/temp'
+import {getChessDetailById} from '../../core/config/temp'
 
-function initStage(key) {
-  const {grid, chessList} = getConfig(key)
-
-
+function initStage(grid, chessList) {
   const chessboard = new Chessboard(grid)
 
   chessList.forEach(chessConfig => {
@@ -72,12 +66,12 @@ function initStage(key) {
       console.error(`${chessId}不存在配置`)
       return
     }
-    const {name, hp, atk, moveStep, attackDistance, frame} = chess
+    const {name, hp, atk, moveStep, attackDistance, frame, skillList} = chess
     let c
     if (group === 1) {
-      c = new Chess(name, hp, atk, moveStep, attackDistance, frame)
+      c = new Chess(name, hp, atk, moveStep, attackDistance, frame, skillList)
     } else {
-      c = new AIChess(name, hp, atk, moveStep, attackDistance, frame)
+      c = new AIChess(name, hp, atk, moveStep, attackDistance, frame, skillList)
     }
 
     chessboard.addChess(c, x, y, group)
@@ -90,19 +84,18 @@ export default {
   name: "Demo",
   components: {Cell},
   props: {
+    config: {
+      type: Object,
+      required: true,
+    },
     mapName: {
       type: String,
       default: 'map1'
     }
   },
-  setup(props) {
-    const instance = initStage(props.mapName)
-
-    const skillList = [
-      ChangeSheepSkill,
-      RecoverSkill,
-      PoisoningSkill
-    ]
+  setup(props, {emit}) {
+    const {grid = [], chessList = []} = props.config
+    const instance = initStage(grid, chessList)
 
     const currentSkill = ref(null)
 
@@ -114,6 +107,9 @@ export default {
 
     const onCellClick = (x, y) => {
       stage.onCellClick(x, y)
+      console.log({x, y})
+      emit('click-cell', {x, y})
+
     }
     const onChessClick = (x, y) => {
       stage.onChessClick(x, y)
@@ -143,7 +139,6 @@ export default {
     return {
       stage,
       currentChess,
-      skillList,
       currentSkill,
       useSkill,
       onCellClick, onChessClick, onMoveRangeCellClick, onAttackRangeCellClick
@@ -164,6 +159,11 @@ export default {
 .profile {
   margin-left: 20px;
 }
+
+.cell {
+  margin: 1px;
+}
+
 .skill-select {
   border: 1px solid red;
 }

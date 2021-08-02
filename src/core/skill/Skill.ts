@@ -1,7 +1,7 @@
 import {Effect, EffectContainer, initEffectWithName, DamageEffect} from "./Effect";
 import {Target} from './Target'
 
-import {skillMap} from '../../views/config/skill'
+import {skillMap} from '../config/skill'
 
 export abstract class Skill implements EffectContainer {
   abstract get name(): string // 从skillMap获取对应的配置项

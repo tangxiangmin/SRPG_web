@@ -9,8 +9,8 @@ export class Stage {
   chessboard: Chessboard
   cellMap: any
   currentChess: Chess
-  currentMoveRange: any
-  currentAttackRange: any
+  currentMoveRange: any // 移动范围
+  currentAttackRange: any // 攻击范围
 
   constructor(chessboard: Chessboard) {
     this.chessboard = chessboard

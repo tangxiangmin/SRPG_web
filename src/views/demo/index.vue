@@ -8,29 +8,33 @@
     </div>
 
     <div style="margin-top: 20px">
-      <Map :mapName="currentMap" :key="currentMap"></Map>
+      <Map :config="config" :key="currentMap"></Map>
     </div>
 
   </div>
 </template>
 
 <script lang="ts">
-import {ref} from 'vue'
+import {computed, ref} from 'vue'
 
-import Map from './map.vue'
-import {mapList} from "../config/temp";
+import Map from './chessboard.vue'
+import {getConfig, mapList} from "../../core/config/temp";
 
 
 export default {
   name: "Demo",
   components: {Map},
   setup() {
-    const currentMap = ref('map1')
 
+    const currentMap = ref('map1')
+    const config = computed(() => {
+      return getConfig(currentMap.value)
+    })
 
     return {
       currentMap,
-      mapList
+      mapList,
+      config
     }
   }
 }

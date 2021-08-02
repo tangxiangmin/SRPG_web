@@ -11,27 +11,35 @@ import tile1 from '../../assets/map/tile_1.png'
 import tile2 from '../../assets/map/tile_2.png'
 // @ts-ignore
 import tile3 from '../../assets/map/tile_3.png'
+import {ChangeSheepSkill, PoisoningSkill, RecoverSkill} from "../skill/Skill";
 
 export const chessList = [
   {
     id: 1,
     name: '王子', type: 1, hp: 100, atk: 20, moveStep: 10, attackDistance: 1,
-    frame: frame1
+    frame: frame1,
+    skillList: [
+      ChangeSheepSkill,
+      RecoverSkill,
+    ]
   },
   {
     id: 2,
-    name: '弓箭手', type: 2, hp: 50, atk: 10, moveStep: 6, attackDistance: 2,
-    frame: frame3
+    name: '弓箭手', type: 2, hp: 50, atk: 10, moveStep: 8, attackDistance: 2,
+    frame: frame3,
+    skillList: [PoisoningSkill]
   },
   {
     id: 3,
     name: '海盗', type: 1, hp: 100, atk: 5, moveStep: 3, attackDistance: 1,
-    frame: frame2
+    frame: frame2,
+    skillList: []
   },
   {
     id: 4,
     name: '海盗2', type: 1, hp: 30, atk: 3, moveStep: 4, attackDistance: 1,
-    frame: frame2
+    frame: frame2,
+    skillList: []
   },
 ]
 

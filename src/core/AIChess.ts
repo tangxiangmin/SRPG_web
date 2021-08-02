@@ -43,7 +43,9 @@ export class AIChess extends Chess {
     // const list = moveRange.filter(({x, y}) => {
     //   return x !== this.x && y !== this.y
     // })
+
     // 确定某个棋子，移动到对应位置
+    // todo 更智能地确定某个目标
     const target = list[0]
     if (!target) return {path: [], canReach: false, onTargetPos: false}
 

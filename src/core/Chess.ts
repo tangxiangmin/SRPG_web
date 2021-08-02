@@ -1,5 +1,6 @@
 import {Target} from "./skill/Target";
 import Chessboard from './Chessboard'
+import {Skill} from "./skill/Skill";
 
 export class Chess extends Target {
   chessboard: Chessboard
@@ -13,15 +14,17 @@ export class Chess extends Target {
   isMoved: boolean = false // 是否可以移动
   isActioned: boolean = false // 是否可以操作
 
+  skillList: Skill[]
 
   // todo 把攻击和技能相关的逻辑交给Target对象
-  constructor(name: string, hp: number, atk: number, moveStep: number, attackDistance: number, frame: string) {
+  constructor(name: string, hp: number, atk: number, moveStep: number, attackDistance: number, frame: string, skillList) {
     super({hp, mp: 10, frame, atk, speed: moveStep})
 
     this.name = name;
 
     this.attackDistance = attackDistance // 攻击距离
     this.moveStep = moveStep; // 移动距离
+    this.skillList = skillList // 技能列表
   }
 
   get isDisabled() {
@@ -38,7 +41,7 @@ export class Chess extends Target {
     this.isActioned = true
   }
 
-  checkStrikeBackTarget(target){
+  checkStrikeBackTarget(target) {
     const attackRange = this.chessboard.calcChessAttackRange(this)
     // 在攻击范围内
     return attackRange.some(({x, y}) => {

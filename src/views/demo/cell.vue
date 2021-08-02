@@ -1,8 +1,6 @@
 <template>
-  <div :class="cellCls" :style="cellStyle">
-    <!--    ({{ x }},{{ y }})-->
+  <div :class="cellCls" :style="cellStyle" @click="onCellClick(x,y)">
     <span :class="chessCls" @click="onChessClick(x,y)" v-if="chess" :style="chessStyle">
-<!--      {{ chess.name }} <br/>{{ chess.hp }}-->
     </span>
     <span class="move-tip" @click="onMoveRangeCellClick(x,y)" v-if="isMoveTip"></span>
     <span class="attack-tip" @click="onAttackRangeCellClick(x,y)" v-if="isAttackRange"></span>
@@ -13,7 +11,7 @@
 import {computed, toRefs} from "vue";
 
 import {getCellKey, CellType} from "../../core/Chessboard";
-import {getCellDetailById} from "../config/temp";
+import {getCellDetailById} from "../../core/config/temp";
 
 export default {
   name: "cell.vue",
