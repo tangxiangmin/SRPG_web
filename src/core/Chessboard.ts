@@ -147,20 +147,69 @@ export default class Chessboard {
     return ans
   }
 
-  findRelativeDir(chess1: Chess, chess2: Chess) {
-    const {x: x1, y: y1} = chess1
-    const {x: x2, y: y2} = chess2
+  // 计算某个棋子的范围
+  calcRange(x, y, moveStep, filter) {
+    const {row, col, grid} = this
+    const ans = []
+    const queue = [{x, y}];
+    const visited = {}
 
-    // const  angle: Number  = Math.atan2( (p1.y-p2.y) , (p2.x-p1.x))
-    // const  theta: Number  = angle*( 180 /Math.PI);
+    const insert = (x, y) => {
+      if (x < 0 || x >= row || y < 0 || y >= col) return;
+      if (!filter(x, y, grid)) return
+
+      const key = getCellKey(x, y)
+      if (visited[key]) return
+
+      visited[key] = true
+      queue.push({x, y})
+    }
+
+    let step = 0
+    let len = queue.length
+    while (len) {
+      len = queue.length
+      while (len--) {
+        const cell = queue.shift()
+        ans.push(cell)
+        const {x, y} = cell
+
+        // todo 针对特殊地形可能需要扣减移动步数
+        insert(x - 1, y)
+        insert(x + 1, y)
+        insert(x, y - 1)
+        insert(x, y + 1)
+      }
+
+      step++
+      if (step > moveStep) {
+        break
+      }
+    }
+
+    // 是否返回原始位置
+    return ans
   }
 
-  checkRoundEnd() {
-    const list = this.getChessListByGroup(this.currentGroup).filter((chess) => !chess.isDisabled)
-    if (list.length === 0) {
-      // todo 还可以进行动作
-      this.toggleGroup()
-    }
+  // 计算移动范围
+  calcChessMoveRange(chess: Chess) {
+    const {x, y, moveStep} = chess
+    return this.calcRange(x, y, moveStep, (x, y, grid) => {
+      const c = this.getChessByPos(x, y)
+      if (c && c !== chess) return false
+      if (grid[x][y] === CellType.wall) return false // 墙无法参加
+      return true
+    })
+  }
+
+  // 计算攻击范围
+  calcChessAttackRange(chess: Chess) {
+    const {x, y, attackDistance} = chess
+    return this.calcRange(x, y, attackDistance, () => {
+      return true
+    }).filter(({x, y}) => {
+      return this.grid[x][y] !== CellType.wall
+    })
   }
 
   // 切换回合

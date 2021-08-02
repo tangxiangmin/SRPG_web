@@ -30,5 +30,14 @@ export const skillMap = {
         args: [2, 10]
       }
     ]
+  },
+  'BoomSkill': {
+    desc: '向指定位置周围2格内的所有单位爆炸，造成15点伤害',
+    effects: [
+      {
+        name: 'BoomEffect',
+        args: [2, 15]
+      }
+    ]
   }
 }

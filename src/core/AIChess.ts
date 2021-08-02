@@ -1,6 +1,8 @@
 import {Chess} from "./Chess";
 
 export class AIChess extends Chess {
+  target: Chess
+
   // 计算选择策略并进行操作
   chooseActionTarget() {
     // const moveRange = this.calcChessMoveRange()
@@ -84,6 +86,13 @@ export class AIChess extends Chess {
 
     // 策略：返回一个随机的可移动位置
     // return list[rdIndex]
+  }
+
+  doAction() {
+    this.isActioned = true
+    if (this.target) {
+      this.attack(this.target)
+    }
   }
 }
 

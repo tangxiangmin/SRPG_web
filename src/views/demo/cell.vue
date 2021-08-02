@@ -18,6 +18,7 @@ import {getCellDetailById} from "../config/temp";
 export default {
   name: "cell.vue",
   props: ['type', 'cellMap', 'moveRange', 'attackRange',
+    'isSelect',
     'onCellClick', 'onChessClick', 'onMoveRangeCellClick', 'onAttackRangeCellClick', 'x', 'y'],
   setup(props) {
     const {cellMap, moveRange, attackRange, x, y} = toRefs(props)
@@ -38,6 +39,7 @@ export default {
 
       const ans = {
         cell: true,
+        'cell-select': props.isSelect
       }
       if (configCls) {
         ans[configCls] = true
@@ -48,7 +50,7 @@ export default {
     const cellStyle = computed(() => {
       const id = props.type
       const cell = getCellDetailById(id)
-      if(!cell) return {}
+      if (!cell) return {}
       const {frame} = cell
       return {
         backgroundImage: `url('${frame}')`
@@ -57,13 +59,12 @@ export default {
 
     const chessCls = computed(() => {
       if (!chess.value) return
-      const {group, isDisabled, isMoved, attackDir} = chess.value
+      const {group, isDisabled, isMoved} = chess.value
       return {
         chess: true,
         ['chess-group-' + group]: true,
         'chess-disabled': isDisabled,
         'chess-moved': isMoved,
-        ['chess-attack-' + attackDir]: attackDir
         // ['chess-attack-1']: true
       }
     })
@@ -105,18 +106,6 @@ export default {
 
 }
 
-@keyframes attack-1 {
-  from {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(50%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
 .cell {
   position: relative;
   $s: 40px;
@@ -134,6 +123,10 @@ export default {
   background-repeat: no-repeat;
   /*transition: all linear .2s;*/
 
+  &-select {
+    box-sizing: border-box;
+    border: 1px solid aqua;
+  }
 
   .move-tip {
     @extend %tip-cell;
@@ -193,11 +186,6 @@ export default {
       height: $s;
       background-color: #000;
     }
-  }
-
-  // 攻击动画
-  &-attack-1 {
-    animation: attack-1 .3s linear;
   }
 }
 

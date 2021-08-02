@@ -1,5 +1,5 @@
 import {Target} from "./Target";
-import {Skill} from "./Skill";
+import {PoisoningDamageBuff} from './Buff'
 
 // 效果接口
 export interface Effect {
@@ -77,23 +77,30 @@ class PoisoningEffect implements Effect {
   }
 
   cast(target: Target) {
-
     const {damage, duration} = this
-
-    class PoisoningDamageSkill extends Skill {
-      get name() {
-        return "中毒";
-      }
-
-      getEffects(): Effect[] {
-        return [
-          new DamageEffect([damage])
-        ]
-      }
-    }
-
-    const buff = new PoisoningDamageSkill()
+    const buff = new PoisoningDamageBuff(damage)
     target.addBuff(buff, duration)
+  }
+
+  reverse() {
+  }
+}
+
+// 范围效果
+class BoomEffect implements Effect {
+  range: number
+  damage: number
+
+  constructor(args) {
+    this.range = args[0]
+    this.damage = args[1]
+  }
+
+  cast(target: Target) {
+    const {x, y} = target
+    // todo 找到x、y周围的元素，执行对应动画和逻辑
+    console.log({x, y})
+    target.hp -= this.damage
   }
 
   reverse() {
@@ -104,7 +111,8 @@ const effectMap = {
   DamageEffect,
   ChangeSheepEffect,
   RecoverEffect,
-  PoisoningEffect
+  PoisoningEffect,
+  BoomEffect
 }
 
 // 根据配置名字和构造参数生成effect实例

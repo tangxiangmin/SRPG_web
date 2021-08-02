@@ -74,7 +74,7 @@ export class Stage {
   showMoveRange() {
     const chess = this.currentChess
     if (chess.isMoved) return
-    let range = chess.calcChessMoveRange()
+    let range = this.chessboard.calcChessMoveRange(chess)
 
     this.currentMoveRange = range.reduce((acc, cell) => {
       const {x, y} = cell
@@ -90,7 +90,7 @@ export class Stage {
     const chess = this.currentChess
     if (chess.isActioned) return
 
-    let range = chess.calcChessAttackRange()
+    let range = this.chessboard.calcChessAttackRange(chess)
     const list = range.filter((({x, y}) => x !== chess.x || y !== chess.y))
 
     this.currentAttackRange = list.reduce((acc, cell) => {
@@ -119,6 +119,8 @@ export class Stage {
       this.chessboard.moveChess(chess, x, y)
       this.renderMap()
     }
+    // 移动完毕后展示攻击范围
+    this.showActionRange()
   }
 
   finishRound() {
@@ -131,15 +133,6 @@ export class Stage {
 
   onCellClick(x, y) {
     console.log('onCellClick', x, y)
-    // const {cellMap} = this.state
-    // const key = getCellKey(x, y)
-    // const {onClick} = cellMap[key]
-    //
-    // if (onClick) {
-    //   onClick(x, y)
-    // } else {
-    //   console.log(`${key}对应的handler不存在`)
-    // }
   }
 
   onChessClick(x, y) {
@@ -194,10 +187,15 @@ export class Stage {
         this.currentChess.useSkill(skill, target)
       }else {
         this.currentChess.attack(target)
-        // todo 判断方向
-        this.currentChess.attackDir = 1
       }
     }
     this.renderMap()
+  }
+
+  endChessInRound(){
+    this.currentChess.isMoved = true
+    this.currentChess.isActioned = true
+    this.currentAttackRange = {}
+    this.currentMoveRange = {}
   }
 }

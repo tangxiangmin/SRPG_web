@@ -6,6 +6,7 @@
       <div class="chessboard">
         <div class="row" v-for="(row,x) in stage.chessboard.grid" :key="x">
           <Cell v-for="(col,y) in row" :x="x" :y="y"
+                :isSelect="currentChess && currentChess.x === x && currentChess.y === y"
                 :key="y"
                 :type="stage.chessboard.grid[x][y]"
                 :cellMap="stage.cellMap"
@@ -21,24 +22,24 @@
       <div class="profile" v-if="currentChess">
         {{ currentChess.name }} <br>
         HP: {{ currentChess.hp }} <br>
-        伤害: {{ currentChess.damage }} <br>
+        伤害: {{ currentChess.atk }} <br>
 
         <div>
           <el-tag v-for="(buff,index) in currentChess.buffList" :key="index">
-            {{buff.buff.name}}
+            {{ buff.buff.name }}
           </el-tag>
         </div>
-
-        <!--        <button @click="stage.showMoveRange">移动</button>-->
-        <teamplate v-if="currentChess.isMoved">
-          <button @click="stage.showActionRange">攻击</button>
-          <button>使用技能</button>
-          <div>
-            技能列表 <br>
-            <button v-for="(skill,index) in skillList" :key="index" @click="useSkill(skill)">{{ skill.name }}</button>
-          </div>
-
-        </teamplate>
+        <button @click="stage.showMoveRange" :disabled="currentChess.isMoved">移动</button>
+        <button @click="stage.showActionRange" :disabled="currentChess.isActioned">攻击</button>
+        <button @click="stage.endChessInRound" :disabled="currentChess.isDisabled">待定</button>
+<!--        <button>使用技能</button>-->
+        <div>
+          技能列表 <br>
+          <button :disabled="currentChess.isActioned" v-for="(skill,index) in skillList" :key="index"
+                  :class="{'skill-select':currentSkill === skill}"
+                  @click="useSkill(skill)">{{ skill.name }}
+          </button>
+        </div>
 
       </div>
     </div>
@@ -71,12 +72,12 @@ function initStage(key) {
       console.error(`${chessId}不存在配置`)
       return
     }
-    const {name, hp, damage, moveStep, attackDistance, frame} = chess
+    const {name, hp, atk, moveStep, attackDistance, frame} = chess
     let c
     if (group === 1) {
-      c = new Chess(name, hp, damage, moveStep, attackDistance, frame)
+      c = new Chess(name, hp, atk, moveStep, attackDistance, frame)
     } else {
-      c = new AIChess(name, hp, damage, moveStep, attackDistance, frame)
+      c = new AIChess(name, hp, atk, moveStep, attackDistance, frame)
     }
 
     chessboard.addChess(c, x, y, group)
@@ -131,6 +132,8 @@ export default {
 
     const useSkill = (Skill) => {
       currentSkill.value = Skill
+      // 展示技能范围
+      stage.showActionRange()
     }
 
     // FIXME 使用箭头函数绑定会导致无法通过Proxy访问到数据，导致无法进行依赖收集，出现更新异常
@@ -141,6 +144,7 @@ export default {
       stage,
       currentChess,
       skillList,
+      currentSkill,
       useSkill,
       onCellClick, onChessClick, onMoveRangeCellClick, onAttackRangeCellClick
     }
@@ -159,5 +163,8 @@ export default {
 
 .profile {
   margin-left: 20px;
+}
+.skill-select {
+  border: 1px solid red;
 }
 </style>

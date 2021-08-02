@@ -15,22 +15,22 @@ import tile3 from '../../assets/map/tile_3.png'
 export const chessList = [
   {
     id: 1,
-    name: '王子', type: 1, hp: 100, damage: 20, moveStep: 10, attackDistance: 1,
+    name: '王子', type: 1, hp: 100, atk: 20, moveStep: 10, attackDistance: 1,
     frame: frame1
   },
   {
     id: 2,
-    name: '弓箭手', type: 2, hp: 50, damage: 10, moveStep: 6, attackDistance: 2,
+    name: '弓箭手', type: 2, hp: 50, atk: 10, moveStep: 6, attackDistance: 2,
     frame: frame3
   },
   {
     id: 3,
-    name: '海盗', type: 1, hp: 100, damage: 5, moveStep: 3, attackDistance: 1,
+    name: '海盗', type: 1, hp: 100, atk: 5, moveStep: 3, attackDistance: 1,
     frame: frame2
   },
   {
     id: 4,
-    name: '海盗2', type: 1, hp: 30, damage: 3, moveStep: 4, attackDistance: 1,
+    name: '海盗2', type: 1, hp: 30, atk: 3, moveStep: 4, attackDistance: 1,
     frame: frame2
   },
 ]
@@ -60,6 +60,7 @@ export function getCellDetailById(id) {
   return cellMap[id]
 }
 
+// todo 实现游戏剧情脚本
 const map1 = {
   // 背景贴图列表
   grid: [

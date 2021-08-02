@@ -27,24 +27,42 @@ npm run dev
 
 ## 一些设定
 
-遭受攻击后，如果攻击目标在攻击范围内，可以进行1次反击
 
-职业
-* 转职，等级到达一定程度可以转职，需要引入等级和经验系统
+### 职业
 
-技能
+转职，等级到达一定程度可以转职，需要引入等级和经验系统
+
+### 技能
 * 伤害型，单体，群攻
-* 功能型，如治疗、buff、debuff 
+* 功能型，如治疗、buff、debuff
 * 特殊型技能，如改变地形、召唤
-* 普攻也作为常规技能
 
-道具
-* 与技能类似，可以理解成不受限某种棋子的技能
+### Buff
+与技能类似，一些增益状态，有一定的持续回合
 
+被动技能可以当做是无持续时间的特殊BUFF
 
-## 进阶
+### 道具
 
-AI https://blog.51cto.com/cping1982/133392
+与技能类似，可以理解成不受限某种棋子的技能
+
+### 攻击
+
+选择在攻击范围内的目标，造成伤害
+
+### 反击
+
+遭受攻击后，如果攻击目标在攻击范围内，可以进行反击
+
+反击次数：0次、1次或多次，由棋子决定
+反击伤害：暂定为原始攻击
+
+## 进阶：一些功能的实现
+《SRPG游戏开发》导航
+https://blog.csdn.net/darkrabbit/article/details/79200777
+
+AI
+https://blog.51cto.com/cping1982/133392
 
 
 配置表
@@ -70,3 +88,12 @@ https://gitbook.cn/books/5bb0c13b6045817d35b98a34/index.html
 
 游戏设计模式，看起来很酷的一本书
 https://gpp.tkchu.me/introduction.html
+
+如何在游戏机制中使用AI/剧情脚本－－－－基于LUA
+http://www.cppblog.com/darkdestiny/archive/2006/10/30/14400.html
+
+一款RPG游戏中的剧情脚本应该怎么实现？
+https://www.zhihu.com/question/38858235
+
+《游戏脚本的设计与开发》
+https://blog.csdn.net/lufy_legend/article/details/8888787

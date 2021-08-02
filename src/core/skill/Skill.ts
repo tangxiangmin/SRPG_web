@@ -41,24 +41,8 @@ export class PoisoningSkill extends Skill {
     return 'PoisoningSkill'
   }
 }
-
-
-export class NormalAttackSkill extends Skill {
-  damage: number
-
-  constructor(damage) {
-    super()
-    this.damage = damage
-  }
-
+export class BoomSkill extends Skill {
   get name() {
-    return "";
-  }
-
-
-  getEffects(): Effect[] {
-    return [
-      new DamageEffect([this.damage])
-    ]
+    return 'BoomSkill'
   }
 }

@@ -1,28 +1,36 @@
 <template>
   <div>
-<!--    <div class="wind"></div>-->
-    <div class="wind2"></div>
-    <div class="light"></div>
-    <div class="fire"></div>
+    <!--    <div class="wind"></div>-->
+    <!--    <div class="wind2"></div>-->
+    <!--    <div class="light"></div>-->
+    <!--    <div class="fire"></div>-->
 
-    <button @click="changeSheepSkill">changeSheepSkill</button>
-    <button @click="recoverSkill">recoverSkill</button>
-    <button @click="poisoningSkill">poisoningSkill</button>
-    <button @click="battle">battle</button>
+
+    <div class="main">
+      <div class="left"></div>
+      <div class="action">
+        <button @click="changeSheepSkill">changeSheepSkill</button>
+        <button @click="recoverSkill">recoverSkill</button>
+        <button @click="poisoningSkill">poisoningSkill</button>
+        <button @click="battle">battle</button>
+        <button @click="boomSkill">boomSkill</button>
+      </div>
+      <div class="right"></div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 
-import {ChangeSheepSkill, RecoverSkill, PoisoningSkill} from "../../core/skill/Skill";
-import {Target} from '../../core/skill/Target'
+import {ChangeSheepSkill, RecoverSkill, PoisoningSkill, BoomSkill} from "../../core/skill/Skill";
+import {DemoTarget} from '../../core/skill/Target'
 import {sleep} from "../../util";
 
 export default {
   name: "skill",
   setup() {
     const getTarget = () => {
-      return new Target({
+      return new DemoTarget({
         hp: 100,
         mp: 10,
         frame: 'none',
@@ -72,11 +80,20 @@ export default {
       console.log(target2)
     }
 
+    const boomSkill = () => {
+      const skill = new BoomSkill()
+      const target = getTarget()
+      skill.spellTo(target)
+      console.log(target)
+    }
+
+
     return {
       changeSheepSkill,
       recoverSkill,
       poisoningSkill,
-      battle
+      battle,
+      boomSkill
     }
   }
 }
@@ -104,6 +121,7 @@ export default {
   background: url('../../assets/skill/wind2.gif') no-repeat center;
   background-size: contain;
 }
+
 .light {
   width: 60px;
   height: 240px;
@@ -118,10 +136,17 @@ export default {
     }
   }
 }
+
 .fire {
   width: 81px;
   height: 101px;
   background-size: contain;
   animation: fire 1s infinite;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>
