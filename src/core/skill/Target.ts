@@ -1,5 +1,6 @@
-import {Skill} from "./Skill";
+import {BoomSkill, Skill} from "./Skill";
 import {Buff} from "./Buff";
+import EventBus from "../EventBus";
 
 
 type rawConfig = {
@@ -11,7 +12,12 @@ type rawConfig = {
   frame: string
 }
 
-export abstract class Target {
+export enum TargetEventType {
+  onAttack,
+  onDie
+}
+
+export abstract class Target extends EventBus {
   config: rawConfig
 
   x: number
@@ -31,8 +37,12 @@ export abstract class Target {
   // 拥有的buff列表
   buffList: ({ buff: Buff, time: number })[]
 
+  // 技能列表
+  skillList: Skill[]
+
   constructor(props) {
-    const {hp, mp, frame, atk, speed, strikeBackNum = 1} = props
+    super()
+    const {hp, mp, frame, atk, speed, strikeBackNum = 1, buffList = [], skillList = []} = props
 
     this.hp = hp
     this.mp = mp
@@ -41,13 +51,25 @@ export abstract class Target {
     this.speed = speed
 
     this.buffList = []
+    this.skillList = skillList // 技能列表
+
     this.strikeBackNum = strikeBackNum
 
     this.config = {
       hp, mp, frame, atk, speed, strikeBackNum
     }
 
-    // todo 配置一些被动
+    // 配置一些被动
+    this.initPassivityBuff(buffList)
+  }
+
+  private initPassivityBuff(buffList) {
+    buffList.forEach(Buff => {
+      const buff = new Buff()
+      buff.work(this)
+      // todo 被动技能持续有效或者几回合后失效
+      // this.addBuff(buff, Infinity)
+    })
   }
 
   // 更新时
@@ -68,11 +90,20 @@ export abstract class Target {
 
   // // 被攻击时
   onAttack(target: Target) {
-    this.hp -= target.atk
-    this.strikeBackTarget = target
 
-    this.strikeBack()
+    this.emit(TargetEventType.onAttack, target)
 
+    this.underAttack(target.atk)
+
+    // 存活才可以反击
+    if (this.hp > 0) {
+      this.strikeBackTarget = target
+      this.strikeBack()
+    }
+  }
+
+  underAttack(damage: number) {
+    this.hp -= damage
     if (this.hp <= 0) {
       this.onDie()
     }
@@ -81,6 +112,7 @@ export abstract class Target {
   // 死亡时
   onDie() {
     // 触发一些被动技能之类的，比如爆炸
+    this.emit(TargetEventType.onDie)
   }
 
   // 添加buff

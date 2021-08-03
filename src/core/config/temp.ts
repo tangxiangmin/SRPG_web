@@ -4,6 +4,10 @@ import frame1 from '../../assets/chess/1.jpeg'
 import frame2 from '../../assets/chess/2.png'
 // @ts-ignore
 import frame3 from '../../assets/chess/3.jpeg'
+// @ts-ignore
+import boom from '../../assets/chess/boom.png'
+// @ts-ignore
+import box from '../../assets/chess/box.jpeg'
 
 // @ts-ignore
 import tile1 from '../../assets/map/tile_1.png'
@@ -11,7 +15,8 @@ import tile1 from '../../assets/map/tile_1.png'
 import tile2 from '../../assets/map/tile_2.png'
 // @ts-ignore
 import tile3 from '../../assets/map/tile_3.png'
-import {ChangeSheepSkill, PoisoningSkill, RecoverSkill} from "../skill/Skill";
+import {ChangeSheepSkill, PoisoningSkill, RecoverSkill, BoomSkill} from "../skill/Skill";
+import {BoomBuff, BackBuff} from "../skill/Buff";
 
 export const chessList = [
   {
@@ -25,7 +30,7 @@ export const chessList = [
   },
   {
     id: 2,
-    name: '弓箭手', type: 2, hp: 50, atk: 10, moveStep: 8, attackDistance: 2,
+    name: '弓箭手', type: 2, hp: 50, atk: 10, moveStep: 11, attackDistance: 2,
     frame: frame3,
     skillList: [PoisoningSkill]
   },
@@ -41,8 +46,23 @@ export const chessList = [
     frame: frame2,
     skillList: []
   },
+  {
+    id: 5,
+    name: '炸弹', type: 1, hp: 1, atk: 10, moveStep: 0, attackDistance: 1,
+    frame: boom,
+    buffList: [
+      BoomBuff
+    ]
+  },
+  {
+    id: 6,
+    name: '箱子', type: 1, hp: 1, atk: 10, moveStep: 0, attackDistance: 1,
+    frame: box,
+    buffList: [
+      BackBuff
+    ]
+  },
 ]
-
 
 export const cellList = [
   {id: 0, name: '墙', weight: 0, frame: tile1},
@@ -89,6 +109,8 @@ const map1 = {
     {chessId: 2, x: 1, y: 2, group: 1},
     {chessId: 3, x: 7, y: 6, group: 2},
     {chessId: 4, x: 9, y: 9, group: 2},
+    {chessId: 5, x: 7, y: 5, group: 3},
+    {chessId: 6, x: 7, y: 4, group: 3},
   ]
 }
 

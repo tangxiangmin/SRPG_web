@@ -63,6 +63,11 @@ export default class Chessboard {
     this.weightGrid = map
   }
 
+  updateGrid(x, y, type) {
+    this.grid[x][y] = type
+    this.initWeightGrid()
+  }
+
   // 添加棋子
   addChess(chess: Chess, x: number, y: number, group: number) {
     chess.x = x
@@ -212,9 +217,27 @@ export default class Chessboard {
     })
   }
 
+  // 找到周围的单元格
+  findAroundCell(x, y) {
+    const {row, col} = this
+
+    const insert = (x, y) => {
+      if (x < 0 || x >= row || y < 0 || y >= col) return;
+      ans.push({x, y})
+    }
+
+    let ans = []
+    insert(x - 1, y)
+    insert(x + 1, y)
+    insert(x, y - 1)
+    insert(x, y + 1)
+    return ans
+  }
+
   // 切换回合
   toggleGroup() {
     this.roundCount++
+    // todo 更智能的分组切换
     this.currentGroup = this.currentGroup === 1 ? 2 : 1
     this.getChessListByGroup(this.currentGroup).forEach(chess => {
       chess.resetOnRound()

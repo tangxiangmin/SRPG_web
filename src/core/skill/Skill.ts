@@ -5,11 +5,13 @@ import {skillMap} from '../config/skill'
 
 export abstract class Skill implements EffectContainer {
   abstract get name(): string // 从skillMap获取对应的配置项
+  desc: string
 
   getEffects() {
     const config = skillMap[this.name]
     if (!config) return []
-    const {effects} = config
+    const {effects, desc} = config
+    this.desc = desc
     return effects.map(c => {
       const {name, args} = c
       return initEffectWithName(name, args)
@@ -41,6 +43,7 @@ export class PoisoningSkill extends Skill {
     return 'PoisoningSkill'
   }
 }
+
 export class BoomSkill extends Skill {
   get name() {
     return 'BoomSkill'

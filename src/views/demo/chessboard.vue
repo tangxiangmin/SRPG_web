@@ -66,12 +66,12 @@ function initStage(grid, chessList) {
       console.error(`${chessId}不存在配置`)
       return
     }
-    const {name, hp, atk, moveStep, attackDistance, frame, skillList} = chess
+    const {name, hp, atk, moveStep, attackDistance, frame, skillList,buffList} = chess
     let c
     if (group === 1) {
-      c = new Chess(name, hp, atk, moveStep, attackDistance, frame, skillList)
+      c = new Chess(name, hp, atk, moveStep, attackDistance, frame, skillList,buffList)
     } else {
-      c = new AIChess(name, hp, atk, moveStep, attackDistance, frame, skillList)
+      c = new AIChess(name, hp, atk, moveStep, attackDistance, frame, skillList,buffList)
     }
 
     chessboard.addChess(c, x, y, group)
@@ -107,7 +107,6 @@ export default {
 
     const onCellClick = (x, y) => {
       stage.onCellClick(x, y)
-      console.log({x, y})
       emit('click-cell', {x, y})
 
     }
@@ -116,12 +115,10 @@ export default {
     }
 
     const onMoveRangeCellClick = (x, y) => {
-      console.log('onMoveRangeCellClick')
       stage.onMoveRangeCellClick(x, y)
     }
 
     const onAttackRangeCellClick = (x, y) => {
-      console.log('onAttackRangeCellClick')
       stage.onAttackRangeCellClick(x, y, currentSkill.value)
       currentSkill.value = null
     }

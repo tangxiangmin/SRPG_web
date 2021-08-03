@@ -132,7 +132,7 @@ export class Stage {
   }
 
   onCellClick(x, y) {
-    console.log('onCellClick', x, y)
+    // console.log('onCellClick', x, y)
   }
 
   onChessClick(x, y) {
