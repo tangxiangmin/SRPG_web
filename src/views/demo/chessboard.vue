@@ -37,7 +37,8 @@
           技能列表 <br>
           <button :disabled="currentChess.isActioned" v-for="(skill,index) in currentChess.skillList" :key="index"
                   :class="{'skill-select':currentSkill === skill}"
-                  @click="useSkill(skill)">{{ skill.name }}
+                  @click="useSkill(skill)">
+            {{ skill.name }}
           </button>
         </div>
       </div>
@@ -66,12 +67,12 @@ function initStage(grid, chessList) {
       console.error(`${chessId}不存在配置`)
       return
     }
-    const {name, hp, atk, moveStep, attackDistance, frame, skillList,buffList} = chess
+    const {name, hp, atk, moveStep, attackDistance, frame, skillList, buffList} = chess
     let c
     if (group === 1) {
-      c = new Chess(name, hp, atk, moveStep, attackDistance, frame, skillList,buffList)
+      c = new Chess(name, hp, atk, moveStep, attackDistance, frame, skillList, buffList)
     } else {
-      c = new AIChess(name, hp, atk, moveStep, attackDistance, frame, skillList,buffList)
+      c = new AIChess(name, hp, atk, moveStep, attackDistance, frame, skillList, buffList)
     }
 
     chessboard.addChess(c, x, y, group)
@@ -123,8 +124,8 @@ export default {
       currentSkill.value = null
     }
 
-    const useSkill = (Skill) => {
-      currentSkill.value = Skill
+    const useSkill = (skill) => {
+      currentSkill.value = skill
       // 展示技能范围
       stage.showActionRange()
     }

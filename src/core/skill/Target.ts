@@ -1,5 +1,5 @@
-import {BoomSkill, Skill} from "./Skill";
-import {Buff} from "./Buff";
+import {Skill} from "./Skill";
+import {Buff, initBuffWithString} from "./Buff";
 import EventBus from "../EventBus";
 
 
@@ -14,6 +14,7 @@ type rawConfig = {
 
 export enum TargetEventType {
   onAttack,
+  onUpdate,
   onDie
 }
 
@@ -35,7 +36,7 @@ export abstract class Target extends EventBus {
   strikeBackTarget: Target
 
   // 拥有的buff列表
-  buffList: ({ buff: Buff, time: number })[]
+  buffList: Buff[]
 
   // 技能列表
   skillList: Skill[]
@@ -59,33 +60,42 @@ export abstract class Target extends EventBus {
       hp, mp, frame, atk, speed, strikeBackNum
     }
 
-    // 配置一些被动
+    // 配置一些被动buff
     this.initPassivityBuff(buffList)
+
+    // 组装主动技能
+    this.initSkillList(skillList)
+  }
+
+  private initSkillList(skillList: string[]) {
+    this.skillList = skillList.map(key => {
+      return new Skill(key)
+    })
   }
 
   private initPassivityBuff(buffList) {
-    buffList.forEach(Buff => {
-      const buff = new Buff()
-      buff.work(this)
-      // todo 被动技能持续有效或者几回合后失效
-      // this.addBuff(buff, Infinity)
+    buffList.forEach(str => {
+      const buff = initBuffWithString(str)
+      this.addBuff(buff)
     })
   }
 
   // 更新时
   onUpdate() {
-    let list = []
-    this.buffList.forEach(({buff, time}) => {
-      buff.work(this)
-      time--
-      // 清空已过期的buff
-      if (time > 0) {
-        list.push({buff, time})
-      }
-    })
-
-    this.buffList = list
+    // let list = []
+    // this.buffList.forEach(({buff, time}) => {
+    //   buff.work(this)
+    //   time--
+    //   // 清空已过期的buff
+    //   if (time > 0) {
+    //     list.push({buff, time})
+    //   }
+    // })
+    //
+    // this.buffList = list
     this.strikeBackNum = this.config.strikeBackNum
+
+    this.emit(TargetEventType.onUpdate)
   }
 
   // // 被攻击时
@@ -116,8 +126,14 @@ export abstract class Target extends EventBus {
   }
 
   // 添加buff
-  addBuff(buff: Buff, time) {
-    this.buffList.push({buff, time})
+  addBuff(buff: Buff) {
+    buff.install(this)
+    this.buffList.push(buff)
+  }
+
+  // 移除buff
+  removeBuff(buff: Buff) {
+    this.buffList = this.buffList.filter(b => b !== buff)
   }
 
   // 普攻

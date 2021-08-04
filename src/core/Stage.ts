@@ -174,7 +174,7 @@ export class Stage {
     this.moveChessByPath(this.currentChess, path)
   }
 
-  onAttackRangeCellClick(x, y, Skill) {
+  onAttackRangeCellClick(x, y, skill) {
     this.currentAttackRange = {}
 
     if (this.currentChess.isActioned) return
@@ -182,8 +182,7 @@ export class Stage {
     const target = this.chessboard.getChessByPos(x, y)
 
     if (target) {
-      if(Skill) {
-        const skill = new Skill()
+      if(skill) {
         this.currentChess.useSkill(skill, target)
       }else {
         this.currentChess.attack(target)

@@ -1,6 +1,7 @@
 <template>
   <div>
-    <el-table>
+    <el-button @click="add">增加</el-button>
+    <el-table border>
       <el-table-column label="id"></el-table-column>
       <el-table-column label="name"></el-table-column>
     </el-table>
@@ -14,18 +15,19 @@ export default {
   name: "chess",
   // components: {CurdTemplate},
   setup() {
-    const api = {
-      getList: () => {
-        return Promise.resolve({list: [], total: 0})
-      }
+
+    const add = ()=>{
+
     }
+
     return {
-      api
     }
   }
 }
 </script>
 
-<style scoped>
-
+<style scoped lang="scss">
+.mt-base {
+  margin-top: 20px;
+}
 </style>

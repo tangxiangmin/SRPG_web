@@ -1,6 +1,5 @@
 import {Target} from "./skill/Target";
 import Chessboard from './Chessboard'
-import {Skill} from "./skill/Skill";
 
 export class Chess extends Target {
   chessboard: Chessboard

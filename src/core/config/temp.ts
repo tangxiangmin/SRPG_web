@@ -15,52 +15,44 @@ import tile1 from '../../assets/map/tile_1.png'
 import tile2 from '../../assets/map/tile_2.png'
 // @ts-ignore
 import tile3 from '../../assets/map/tile_3.png'
-import {ChangeSheepSkill, PoisoningSkill, RecoverSkill, BoomSkill} from "../skill/Skill";
-import {BoomBuff, BackBuff} from "../skill/Buff";
 
 export const chessList = [
   {
     id: 1,
     name: '王子', type: 1, hp: 100, atk: 20, moveStep: 10, attackDistance: 1,
     frame: frame1,
-    skillList: [
-      ChangeSheepSkill,
-      RecoverSkill,
-    ]
+    skillList: ['RecoverSkill',],
   },
   {
     id: 2,
     name: '弓箭手', type: 2, hp: 50, atk: 10, moveStep: 11, attackDistance: 2,
     frame: frame3,
-    skillList: [PoisoningSkill]
+    skillList: ['PoisoningSkill']
   },
   {
     id: 3,
     name: '海盗', type: 1, hp: 100, atk: 5, moveStep: 3, attackDistance: 1,
     frame: frame2,
-    skillList: []
+    skillList: [],
+    buffList: ['PoisoningDamageBuff,10,3', 'DieBoomBuff,20,1']
   },
   {
     id: 4,
     name: '海盗2', type: 1, hp: 30, atk: 3, moveStep: 4, attackDistance: 1,
     frame: frame2,
-    skillList: []
+    skillList: [],
   },
   {
     id: 5,
     name: '炸弹', type: 1, hp: 1, atk: 10, moveStep: 0, attackDistance: 1,
     frame: boom,
-    buffList: [
-      BoomBuff
-    ]
+    buffList: ['DieBoomBuff']
   },
   {
     id: 6,
     name: '箱子', type: 1, hp: 1, atk: 10, moveStep: 0, attackDistance: 1,
     frame: box,
-    buffList: [
-      BackBuff
-    ]
+    buffList: ['BackBuff']
   },
 ]
 
@@ -90,6 +82,31 @@ export function getCellDetailById(id) {
 
 // todo 实现游戏剧情脚本
 const map1 = {
+  // 背景贴图列表
+  grid: [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  ],
+  chessList: [
+    // 根据chessId查找chess详情
+    {chessId: 1, x: 0, y: 2, group: 1},
+    {chessId: 2, x: 1, y: 2, group: 1},
+    {chessId: 3, x: 9, y: 4, group: 2},
+    {chessId: 4, x: 9, y: 5, group: 2},
+    {chessId: 6, x: 6, y: 4, group: 3},
+    {chessId: 6, x: 6, y: 5, group: 3},
+  ]
+}
+
+const map3 = {
   // 背景贴图列表
   grid: [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -138,7 +155,8 @@ const map2 = {
 
 export const mapList = {
   map1,
-  map2
+  map2,
+  map3
 }
 
 export function getConfig(key) {

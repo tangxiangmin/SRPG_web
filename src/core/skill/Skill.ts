@@ -1,17 +1,27 @@
-import {Effect, EffectContainer, initEffectWithName, DamageEffect} from "./Effect";
+import {Effect, EffectContainer, initEffectWithName} from "./Effect";
 import {Target} from './Target'
 
 import {skillMap} from '../config/skill'
 
-export abstract class Skill implements EffectContainer {
-  abstract get name(): string // 从skillMap获取对应的配置项
+export class Skill implements EffectContainer {
+  key:string
+  name: string
   desc: string
+  effectList: Effect[]
+
+  constructor(key: string) {
+    this.key = key
+    this.effectList = this.getEffects()
+  }
+
 
   getEffects() {
-    const config = skillMap[this.name]
+    const config = skillMap[this.key]
     if (!config) return []
-    const {effects, desc} = config
+    const {effects, desc,name} = config
     this.desc = desc
+    this.name = name
+
     return effects.map(c => {
       const {name, args} = c
       return initEffectWithName(name, args)
@@ -19,33 +29,9 @@ export abstract class Skill implements EffectContainer {
   }
 
   spellTo(target: Target) {
-    const effectList = this.getEffects()
+    const effectList = this.effectList
     for (const effect of effectList) {
       effect.cast(target);
     }
-  }
-}
-
-export class ChangeSheepSkill extends Skill {
-  get name() {
-    return 'ChangeSheepSkill'
-  }
-}
-
-export class RecoverSkill extends Skill {
-  get name() {
-    return 'RecoverSkill'
-  }
-}
-
-export class PoisoningSkill extends Skill {
-  get name() {
-    return 'PoisoningSkill'
-  }
-}
-
-export class BoomSkill extends Skill {
-  get name() {
-    return 'BoomSkill'
   }
 }
