@@ -7,6 +7,8 @@ import 'element-plus/lib/theme-chalk/index.css'
 // @ts-ignore
 import App from './App.vue'
 
+import './effect.scss'
+
 const app = createApp(App)
 
 app.use(ElementPlus)

@@ -35,13 +35,12 @@ export class AIChess extends Chess {
     }
   }
 
-  find() {
+  // 找到移动目标位置
+  chooseMoveTarget(): { path: any[], canReach: boolean, onTargetPos: boolean } {
     // 找到敌方的棋子
-    const list = this.chessboard.chessList.filter(chess => chess.group !== this.group)
+    const list = this.chessboard.chessList.filter(chess => chess.group === 1)
 
-    // 确定某个棋子，移动到对应位置
-    // todo 更智能地确定某个目标
-    // const target = list[0]
+    // todo 优化此处算法，更智能地确定某个目标
     if (!list.length) {
       return {path: [], canReach: false, onTargetPos: false}
     }
@@ -55,10 +54,11 @@ export class AIChess extends Chess {
         return {path: [], canReach: true, onTargetPos: true}
       }
 
+      // 找到最近的目标 对应 最近的路
       const findNearestPath = () => {
         let minPath = []
-        for (let target of targetAroundList) {
-          const path = this.chessboard.finPath(this.x, this.y, target.x, target.y)
+        for (let cell of targetAroundList) {
+          const path = this.chessboard.finPath(this.x, this.y, cell.x, cell.y)
           if (!minPath.length) {
             minPath = path
           } else if (path.length && minPath.length > path.length) {
@@ -70,7 +70,7 @@ export class AIChess extends Chess {
 
       // 找到最近的一个目标位置
       const curPath = findNearestPath()
-      if (!path.length || path.length > curPath.length) {
+      if (!path.length || (curPath.length && path.length > curPath.length)) {
         path = curPath
         this.target = target // 设置目标
       }
@@ -87,59 +87,6 @@ export class AIChess extends Chess {
       canReach: path.length <= this.moveStep,
       onTargetPos: false
     }
-
-  }
-
-  // 找到移动目标位置
-  chooseMoveTarget(): { path: any[], canReach: boolean, onTargetPos: boolean } {
-    // 找到敌方的棋子
-    const list = this.chessboard.chessList.filter(chess => chess.group !== this.group)
-
-    // 确定某个棋子，移动到对应位置
-    // todo 更智能地确定某个目标
-    const target = list[0]
-    if (!target) return {path: [], canReach: false, onTargetPos: false}
-
-
-    this.target = target // 设置目标
-
-    const targetAroundList = this.chessboard.findTargetAround(target.x, target.y, this)
-
-    const onTargetAround = targetAroundList.find(({x, y}) => x === this.x && y === this.y)
-    if (onTargetAround) {
-      return {path: [], canReach: true, onTargetPos: true}
-    }
-
-    const findNearestPath = () => {
-      let minPath = []
-      for (let target of targetAroundList) {
-        const path = this.chessboard.finPath(this.x, this.y, target.x, target.y)
-        if (!minPath.length) {
-          minPath = path
-        } else if (path.length && minPath.length > path.length) {
-          minPath = path
-        }
-      }
-      return minPath
-    }
-
-    // 找到最近的一个目标位置
-    const path = findNearestPath()
-
-    if (!path.length) {
-      console.log('no path')
-
-      return {path: [], canReach: false, onTargetPos: false}
-    }
-
-    return {
-      path: path.slice(0, this.moveStep),
-      canReach: path.length <= this.moveStep,
-      onTargetPos: false
-    }
-
-    // 策略：返回一个随机的可移动位置
-    // return list[rdIndex]
   }
 
   doAction() {

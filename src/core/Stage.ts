@@ -3,6 +3,8 @@ import Chessboard, {getCellKey} from './Chessboard'
 import {Chess} from "./Chess";
 import {AIChess} from './AIChess'
 import {sleep} from "../util";
+import {TargetEventType} from "./skill/Target";
+import {showDamage} from "./Animation";
 
 // 负责管理流程和动画等功能
 export class Stage {
@@ -18,6 +20,12 @@ export class Stage {
     this.currentAttackRange = {}
 
     this.renderMap()
+
+    this.chessboard.chessList.forEach(chess => {
+      chess.on(TargetEventType.underAttack, (num) => {
+        showDamage(chess.x, chess.y, num)
+      })
+    })
   }
 
   // 电脑回合
@@ -182,16 +190,16 @@ export class Stage {
     const target = this.chessboard.getChessByPos(x, y)
 
     if (target) {
-      if(skill) {
+      if (skill) {
         this.currentChess.useSkill(skill, target)
-      }else {
+      } else {
         this.currentChess.attack(target)
       }
     }
     this.renderMap()
   }
 
-  endChessInRound(){
+  endChessInRound() {
     this.currentChess.isMoved = true
     this.currentChess.isActioned = true
     this.currentAttackRange = {}

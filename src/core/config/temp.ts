@@ -46,7 +46,7 @@ export const chessList = [
     id: 5,
     name: '炸弹', type: 1, hp: 1, atk: 10, moveStep: 0, attackDistance: 1,
     frame: boom,
-    buffList: ['DieBoomBuff']
+    buffList: ['DieBoomBuff,20,1']
   },
   {
     id: 6,
@@ -81,7 +81,7 @@ export function getCellDetailById(id) {
 }
 
 // todo 实现游戏剧情脚本
-const map1 = {
+const map3 = {
   // 背景贴图列表
   grid: [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -101,12 +101,12 @@ const map1 = {
     {chessId: 2, x: 1, y: 2, group: 1},
     {chessId: 3, x: 9, y: 4, group: 2},
     {chessId: 4, x: 9, y: 5, group: 2},
-    {chessId: 6, x: 6, y: 4, group: 3},
+    {chessId: 5, x: 6, y: 4, group: 3},
     {chessId: 6, x: 6, y: 5, group: 3},
   ]
 }
 
-const map3 = {
+const map1 = {
   // 背景贴图列表
   grid: [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],

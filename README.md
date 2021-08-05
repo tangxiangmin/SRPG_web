@@ -71,6 +71,10 @@ Buff
 * 反击次数：0次、1次或多次，由棋子决定
 * 反击伤害：暂定为原始攻击
 
+## 扩展模式
+
+类似于StormBound的卡牌战略类游戏
+
 ## 进阶：一些功能的实现
 《SRPG游戏开发》导航
 https://blog.csdn.net/darkrabbit/article/details/79200777

@@ -26,7 +26,7 @@
 
         <div>
           <el-tag v-for="(buff,index) in currentChess.buffList" :key="index">
-            {{ buff.buff.name }}
+            {{ buff.name }}
           </el-tag>
         </div>
         <button @click="stage.showMoveRange" :disabled="currentChess.isMoved">移动</button>

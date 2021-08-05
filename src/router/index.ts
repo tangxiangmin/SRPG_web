@@ -2,7 +2,6 @@ import * as VueRouter from "vue-router";
 
 import Index from '../views/index.vue'
 import Demo from '../views/demo/index.vue'
-import Skill from '../views/demo/skill.vue'
 import ConfigMap from '../views/config/map.vue'
 // @ts-ignore
 import ConfigChess from '../views/config/chess.vue'
@@ -10,7 +9,6 @@ import ConfigChess from '../views/config/chess.vue'
 const routes = [
   {path: '/', component: Index},
   {path: '/demo', component: Demo},
-  {path: '/skill', component: Skill},
   {path: '/config/map', component: ConfigMap},
   {path: '/config/chess', component: ConfigChess},
 ]

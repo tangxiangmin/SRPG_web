@@ -15,7 +15,8 @@ type rawConfig = {
 export enum TargetEventType {
   onAttack,
   onUpdate,
-  onDie
+  onDie,
+  underAttack,
 }
 
 export abstract class Target extends EventBus {
@@ -113,6 +114,8 @@ export abstract class Target extends EventBus {
   }
 
   underAttack(damage: number) {
+    this.emit(TargetEventType.underAttack, damage)
+
     this.hp -= damage
     if (this.hp <= 0) {
       this.onDie()

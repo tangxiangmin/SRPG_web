@@ -1,0 +1,22 @@
+
+@keyframes move-up {
+    from  {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+// 受到伤害时的攻击
+.damage {
+    position: fixed;
+    z-index: 999;
+    color: red;
+    padding: 3px 5px;
+    font-weight: bold;
+    font-size: 16px;
+
+    animation: move-up 2s forwards;
+}
