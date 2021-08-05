@@ -1,10 +1,8 @@
-import {Effect, EffectContainer, initEffectWithName} from "./Effect";
-import {Target} from './Target'
-
-import {skillMap} from '../config/skill'
+import {Effect, EffectTarget, EffectContainer,} from './Effect'
+import {initEffectWithName} from "../slg/Effect";
 
 export class Skill implements EffectContainer {
-  key:string
+  key: string
   name: string
   desc: string
   effectList: Effect[]
@@ -14,11 +12,17 @@ export class Skill implements EffectContainer {
     this.effectList = this.getEffects()
   }
 
+  // 子类实现
+  getSkillMap() {
+    return {}
+  }
+  initEffectWithName(name, args){}
 
   getEffects() {
+    const skillMap = this.getSkillMap()
     const config = skillMap[this.key]
     if (!config) return []
-    const {effects, desc,name} = config
+    const {effects, desc, name} = config
     this.desc = desc
     this.name = name
 
@@ -28,7 +32,7 @@ export class Skill implements EffectContainer {
     })
   }
 
-  spellTo(target: Target) {
+  spellTo(target: EffectTarget) {
     const effectList = this.effectList
     for (const effect of effectList) {
       effect.cast(target);

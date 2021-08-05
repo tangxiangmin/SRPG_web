@@ -2,8 +2,8 @@ import Chessboard, {getCellKey} from './Chessboard'
 
 import {Chess} from "./Chess";
 import {AIChess} from './AIChess'
-import {sleep} from "../util";
-import {TargetEventType} from "./skill/Target";
+import {sleep} from "../../util";
+import {ChessEventType} from "./Chess";
 import {showDamage} from "./Animation";
 
 // 负责管理流程和动画等功能
@@ -22,7 +22,7 @@ export class Stage {
     this.renderMap()
 
     this.chessboard.chessList.forEach(chess => {
-      chess.on(TargetEventType.underAttack, (num) => {
+      chess.on(ChessEventType.underAttack, (num) => {
         showDamage(chess.x, chess.y, num)
       })
     })

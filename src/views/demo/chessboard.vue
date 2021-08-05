@@ -48,10 +48,10 @@
 
 <script lang="ts">
 import {reactive, computed, ref} from 'vue'
-import {Chess} from "../../core/Chess"
-import {AIChess} from '../../core/AIChess'
-import {Stage} from "../../core/Stage"
-import Chessboard, {ChessboardEvent} from "../../core/Chessboard"
+import {Chess} from "../../core/slg/Chess"
+import {AIChess} from '../../core/slg/AIChess'
+import {Stage} from "../../core/slg/Stage"
+import Chessboard, {ChessboardEvent} from "../../core/slg/Chessboard"
 
 import Cell from './cell.vue'
 
@@ -70,9 +70,9 @@ function initStage(grid, chessList) {
     const {name, hp, atk, moveStep, attackDistance, frame, skillList, buffList} = chess
     let c
     if (group === 1) {
-      c = new Chess(name, hp, atk, moveStep, attackDistance, frame, skillList, buffList)
+      c = new Chess(chess)
     } else {
-      c = new AIChess(name, hp, atk, moveStep, attackDistance, frame, skillList, buffList)
+      c = new AIChess(chess)
     }
 
     chessboard.addChess(c, x, y, group)

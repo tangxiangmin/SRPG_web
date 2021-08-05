@@ -1,22 +1,21 @@
 <template>
 
 
-  <div>
+  <div class="page">
     <button @click="chessboard.toggleRound">切换</button>
 
     <div>
-      hp:{{ chessboard.playerList[1]?.hp }}<br>
+      hp:{{ chessboard.playerList[1]?.hp }}
       energy: {{ chessboard.playerList[1].energy }}
     </div>
     <div class="row" v-for="(row,x) in chessboard.row" :key="x"
          :class="{'row-available':putRange[0] <= x && putRange[1] >=x}">
       <div class="cell" v-for="(col,y) in chessboard.col" :x="x" :y="y" @click="onCellClick(x,y)">
-        <!--        {{ x }}, {{ y }}-->
         <CardCell :card="chessboard.getCardByPos(x, y)"></CardCell>
       </div>
     </div>
     <div>
-      hp:{{ chessboard.playerList[0]?.hp }} <br>
+      hp:{{ chessboard.playerList[0]?.hp }}
       energy: {{ chessboard.playerList[0].energy }}
     </div>
     <div>
@@ -77,6 +76,11 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.page {
+  width: 500px;
+  margin: 0 auto;
+
+}
 .row {
   display: flex;
 
@@ -88,7 +92,7 @@ export default {
 .cell {
   margin: 1px;
   position: relative;
-  $s: 40px;
+  $s: 100px;
   width: $s;
   height: $s;
   //margin: 3px;

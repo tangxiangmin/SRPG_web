@@ -1,5 +1,5 @@
 import {astar, Graph} from 'javascript-astar'
-import EventBus from './EventBus'
+import EventBus from '../common/EventBus'
 
 import {Chess} from "./Chess"
 

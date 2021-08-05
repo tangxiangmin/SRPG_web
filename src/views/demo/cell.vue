@@ -10,7 +10,7 @@
 <script>
 import {computed, toRefs} from "vue";
 
-import {getCellKey, CellType} from "../../core/Chessboard";
+import {getCellKey, CellType} from "../../core/slg/Chessboard";
 import {getCellDetailById} from "../../core/config/temp";
 
 export default {

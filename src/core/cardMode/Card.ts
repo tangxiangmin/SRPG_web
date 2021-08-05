@@ -1,7 +1,11 @@
-import EventBus from "../EventBus";
 import {sleep} from "../../util";
 import {CardChessboard} from './CardChessboard'
 import {Player} from './Player'
+import {EffectTarget} from "../common/Effect";
+import {CardSkill} from "./Skill";
+import {initBuffWithString} from "../common/Buff";
+
+import {buffMap} from './Buff'
 
 export enum CardEventEnum {
   onMove,
@@ -9,7 +13,7 @@ export enum CardEventEnum {
   onDie
 }
 
-export class Card extends EventBus {
+export class Card extends EffectTarget {
   player: Player
   chessboard: CardChessboard
 
@@ -22,14 +26,8 @@ export class Card extends EventBus {
   y: number
 
   constructor(props) {
-    super()
-    const {
-      name,
-      costEnergy,
-      firstStep,
-      moveStep,
-      hp
-    } = props
+    super(props)
+    const {name, costEnergy, firstStep, moveStep, hp} = props
 
     this.hp = hp
     this.name = name
@@ -38,7 +36,21 @@ export class Card extends EventBus {
     this.moveStep = moveStep
 
     this.on(CardEventEnum.onPut, () => {
+      // todo 一些特殊技能
       console.log(`${this.player.name} ${this.name}打出`)
+    })
+  }
+
+  initSkillList(skillList: string[]) {
+    this.skillList = skillList.map(key => {
+      return new CardSkill(key)
+    })
+  }
+
+  initPassivityBuff(buffList) {
+    buffList.forEach(str => {
+      const buff = initBuffWithString(str, buffMap)
+      this.addBuff(buff)
     })
   }
 
@@ -47,7 +59,7 @@ export class Card extends EventBus {
     const target = this.chessboard.getCardByPos(nextPos.x, nextPos.y)
     if (target && target.player !== this.player) {
       this.attackCard(target)
-      return false
+      return true
     }
 
     // 到达敌人目标地址，攻击player
@@ -56,40 +68,12 @@ export class Card extends EventBus {
       (this.player.dir === -1 && nextPos.x < 0)
     ) {
 
-      const enemy =  this.chessboard.findPlayerEnemy(this.player)
-      this.attackPlayer(enemy)
+      this.attackPlayer(this.hp)
+      this.onDie()
       return false
     }
 
     return !target
-  }
-
-  attackPlayer(player: Player) {
-    player.hp -= this.hp
-    this.onDie()
-  }
-
-  attackCard(target: Card) {
-    const atk1 = this.hp
-    const atk2 = target.hp
-    target.hp -= atk1
-    this.hp -= atk2
-
-    if (target.hp <= 0) {
-      target.onDie()
-    }
-
-    if (this.hp <= 0) {
-      this.onDie()
-    }
-  }
-
-  onDie() {
-    this.chessboard.removeCard(this)
-
-    console.log(`${this.player.name} ${this.name}死亡`)
-
-    this.emit(CardEventEnum.onDie)
   }
 
   // 根据分组处理移动方向
@@ -118,39 +102,76 @@ export class Card extends EventBus {
   moveForward() {
     this.move(this.moveStep)
   }
+
+
+  attackPlayer(damage) {
+    const enemy = this.chessboard.findPlayerEnemy(this.player)
+    enemy.hp -= damage
+  }
+
+  onAttack(target:Card){
+
+  }
+
+  attackCard(target: Card) {
+    const atk1 = this.hp
+    const atk2 = target.hp
+    target.hp -= atk1
+    this.hp -= atk2
+
+    if (target.hp <= 0) {
+      target.onDie()
+    }
+
+    if (this.hp <= 0) {
+      this.onDie()
+    }
+  }
+
+  onDie() {
+    this.chessboard.removeCard(this)
+
+    console.log(`${this.player.name} ${this.name}死亡`)
+
+    this.emit(CardEventEnum.onDie)
+  }
+
 }
 
 // 配置的一些卡片
+// todo 这里写个脚本来随机生成一些有趣的卡片
 const map = {
   1: {
-    name: 'card1',
+    name: '新兵',
     costEnergy: 1,
     firstStep: 1,
     moveStep: 1,
     hp: 1
   },
   2: {
-    name: 'card2',
+    name: '传令兵',
     costEnergy: 2,
     firstStep: 2,
     moveStep: 1,
     hp: 2
   },
   3: {
-    name: 'card3',
+    name: '斥候',
     costEnergy: 1,
     firstStep: 3,
     moveStep: 1,
-    hp: 3
+    hp: 1,
+    buffList: ['DieBoomBuff,2,1'] // 死亡时对敌方旗手造成1点伤害
   },
   4: {
-    name: 'card4',
-    costEnergy: 1,
-    firstStep: 3,
+    name: '老兵',
+    costEnergy: 3,
+    firstStep: 1,
     moveStep: 1,
-    hp: 3
+    hp: 5
   }
 }
+
 function createCardById(id: number): Card {
   const config = map[id]
   return new Card(config)

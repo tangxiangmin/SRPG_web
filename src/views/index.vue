@@ -4,11 +4,18 @@
     {{ instance.data.x }}
     <button @click="instance.change1">change1</button>
     <button @click="instance.change2">change2</button>
+
+    <router-link to="/demo">
+      <button>战棋</button>
+    </router-link>
+    <router-link to="/card">
+      <button>卡片对战</button>
+    </router-link>
   </div>
 </template>
 
 <script>
-import {watch, reactive} from "vue";
+import { reactive} from "vue";
 
 class Test {
   constructor() {

@@ -69,7 +69,7 @@
 import {computed, reactive, ref} from "vue"
 import {ElMessage} from 'element-plus'
 
-import {getCellKey} from "../../core/Chessboard";
+import {getCellKey} from "../../core/slg/Chessboard";
 import {chessList, cellList} from "../../core/config/temp";
 
 import GameMap from '../demo/chessboard.vue'

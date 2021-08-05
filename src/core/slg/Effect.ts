@@ -1,17 +1,9 @@
-import {Target} from "./Target";
+import {Effect} from '../common/Effect'
+
+import {Chess} from "./Chess";
 import {PoisoningDamageBuff} from './Buff'
-import {Chess} from "../Chess";
-import {CellType} from "../Chessboard";
-
-// 效果接口
-export interface Effect {
-  cast(target: Target): void
-}
-
-// 装备、buff 等都可以当做是 effect容器
-export interface EffectContainer {
-  getEffects(): Effect[]
-}
+import {CellType} from "./Chessboard";
+import {Card} from "../cardMode/Card";
 
 //  下面是需要实现的各种效果， 通过在skill中组装实现技能和buff等功能
 
@@ -22,7 +14,7 @@ export class DamageEffect implements Effect {
     this.damage = args[0]
   }
 
-  cast(target: Target) {
+  cast(target: Chess) {
     target.hp -= this.damage
   }
 }
@@ -38,7 +30,7 @@ class ChangeSheepEffect implements Effect {
     this.speed = args[2]
   }
 
-  cast(target: Target) {
+  cast(target: Chess) {
     target.frame = this.frame
     target.atk = this.atk
     target.speed = this.speed
@@ -52,7 +44,7 @@ class RecoverEffect implements Effect {
     this.hp = args[0]
   }
 
-  cast(target: Target) {
+  cast(target: Chess) {
     target.hp += this.hp
   }
 }
@@ -67,7 +59,7 @@ class PoisoningEffect implements Effect {
     this.damage = args[1]
   }
 
-  cast(target: Target) {
+  cast(target: Chess) {
     const {damage, duration} = this
     const buff = new PoisoningDamageBuff([damage, duration])
     target.addBuff(buff)
@@ -84,7 +76,7 @@ export class BoomEffect implements Effect {
     this.damage = args[1]
   }
 
-  cast(target: Target) {
+  cast(target: Chess) {
     const chessboard = (target as Chess).chessboard
     const cellList = chessboard.findAroundCell(target.x, target.y)
 
@@ -111,7 +103,7 @@ export class BackEffect implements Effect {
     this.enemyY = args[1]
   }
 
-  cast(target: Target) {
+  cast(target: Chess) {
     const {x: x0, y: y0} = target
     const {enemyX: x1, enemyY: y1} = this
     // 根据敌人的攻击方向确认移动位置
@@ -132,13 +124,30 @@ export class BackEffect implements Effect {
   }
 }
 
+export class CardDieEffect implements Effect {
+  range: number
+  damage: number
+
+  constructor(args) {
+    this.range = args[0]
+    this.damage = args[1]
+  }
+
+  cast(target: Card) {
+    console.log(target)
+    target.attackPlayer(this.damage)
+  }
+}
+
+
 const effectMap = {
   DamageEffect,
   ChangeSheepEffect,
   RecoverEffect,
   PoisoningEffect,
   BoomEffect,
-  BackEffect
+  BackEffect,
+  CardDieEffect
 }
 
 // 根据配置名字和构造参数生成effect实例

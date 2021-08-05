@@ -8,7 +8,7 @@ export class CardChessboard {
   row: number
   col: number
 
-  chessList: Card[] = []
+  cardList: Card[] = []
 
   putRange: number[]
 
@@ -41,7 +41,7 @@ export class CardChessboard {
     card.y = y
 
 
-    this.chessList.push(card)
+    this.cardList.push(card)
 
     card.on(CardEventEnum.onDie, () => {
       this.getCurrentPlayerPutRange()
@@ -57,7 +57,7 @@ export class CardChessboard {
   }
 
   removeCard(card) {
-    this.chessList = this.chessList.filter(c => c !== card)
+    this.cardList = this.cardList.filter(c => c !== card)
   }
 
 
@@ -83,7 +83,7 @@ export class CardChessboard {
   }
 
   getCardByPos(x: number, y: number) {
-    return this.chessList.find(chess => chess.x === x && chess.y === y)
+    return this.cardList.find(chess => chess.x === x && chess.y === y)
   }
 
   findPlayerEnemy(player) {
@@ -108,7 +108,7 @@ export class CardChessboard {
     }
   }
 
-  // todo 这里需要设计比较灵活的AI
+  // todo 这里需要设计比较灵活的AI https://www.xqbase.com/index.htm
   private autoPlay() {
     this.currentPlayer.selectCard(this.currentPlayer.cardList[0])
     // 随便放个位置
@@ -117,7 +117,7 @@ export class CardChessboard {
   }
 
   private getPlayerChessList(player) {
-    return this.chessList.filter(card => card.player === player)
+    return this.cardList.filter(card => card.player === player)
   }
 }
 
