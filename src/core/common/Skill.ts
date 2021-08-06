@@ -1,7 +1,6 @@
 import {Effect, EffectTarget, EffectContainer,} from './Effect'
-import {initEffectWithName} from "../slg/Effect";
 
-export class Skill implements EffectContainer {
+export abstract class Skill implements EffectContainer {
   key: string
   name: string
   desc: string
@@ -13,10 +12,9 @@ export class Skill implements EffectContainer {
   }
 
   // 子类实现
-  getSkillMap() {
-    return {}
-  }
-  initEffectWithName(name, args){}
+  abstract getSkillMap(): {}
+
+  abstract initEffectWithName(name, args): void
 
   getEffects() {
     const skillMap = this.getSkillMap()
@@ -28,7 +26,7 @@ export class Skill implements EffectContainer {
 
     return effects.map(c => {
       const {name, args} = c
-      return initEffectWithName(name, args)
+      return this.initEffectWithName(name, args)
     })
   }
 

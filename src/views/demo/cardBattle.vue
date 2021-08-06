@@ -41,8 +41,8 @@ export default {
 
     const chessboard = new CardChessboard()
 
-    const p1 = new Player({name: 'p1', cardGroup: [1, 2, 3], dir: -1})
-    const p2 = new Player({name: 'p2', cardGroup: [2], dir: 1})
+    const p1 = new Player({name: 'p1', cardGroup: [ 3], dir: -1})
+    const p2 = new Player({name: 'p2', cardGroup: [1], dir: 1})
 
     chessboard.addPlayer(p1)
     chessboard.addPlayer(p2)
@@ -69,8 +69,6 @@ export default {
       onCellClick,
       putRange
     }
-
-
   }
 }
 </script>

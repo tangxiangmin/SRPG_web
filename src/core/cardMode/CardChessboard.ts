@@ -91,7 +91,43 @@ export class CardChessboard {
   }
 
   getCurrentPlayerPutRange() {
-    this.putRange =  this.getPlayerPutRange(this.currentPlayer)
+    this.putRange = this.getPlayerPutRange(this.currentPlayer)
+  }
+
+  // 找到指定坐标周围的棋子
+  findAroundCard(x, y): Card[] {
+    const list = this.findAroundPos(x, y)
+    let ans: Card[] = []
+    list.forEach(({x, y}) => {
+      let card = this.getCardByPos(x, y)
+      if (card) {
+        ans.push(card)
+      }
+    })
+
+    return ans
+  }
+
+  private findAroundPos(x, y): { x: number, y: number }[] {
+    const {row, col} = this
+
+    let ans = []
+    const insert = (x, y) => {
+      if (x < 0 || x >= row || y < 0 || y >= col) return
+      ans.push({x, y})
+    }
+
+    // 找到周围的单元格
+    insert(x - 1, y)
+    insert(x + 1, y)
+    insert(x, y - 1)
+    insert(x, y + 1)
+    insert(x - 1, y - 1)
+    insert(x + 1, y - 1)
+    insert(x - 1, y + 1)
+    insert(x + 1, y + 1)
+
+    return ans
   }
 
   // 获取可移动距离

@@ -3,14 +3,18 @@ import {CardChessboard} from './CardChessboard'
 import {Player} from './Player'
 import {EffectTarget} from "../common/Effect";
 import {CardSkill} from "./Skill";
-import {initBuffWithString} from "../common/Buff";
 
-import {buffMap} from './Buff'
+import {CardBuff} from './Buff'
+
+import {getBuffConfigByKey} from './buffList'
+
 
 export enum CardEventEnum {
   onMove,
   onPut,
-  onDie
+  onDie,
+  afterAttack,
+  onUpdate
 }
 
 export class Card extends EffectTarget {
@@ -48,8 +52,9 @@ export class Card extends EffectTarget {
   }
 
   initPassivityBuff(buffList) {
-    buffList.forEach(str => {
-      const buff = initBuffWithString(str, buffMap)
+    buffList.forEach(key => {
+      const config = getBuffConfigByKey(key)
+      const buff = new CardBuff(config)
       this.addBuff(buff)
     })
   }
@@ -109,22 +114,20 @@ export class Card extends EffectTarget {
     enemy.hp -= damage
   }
 
-  onAttack(target:Card){
-
-  }
-
   attackCard(target: Card) {
     const atk1 = this.hp
     const atk2 = target.hp
-    target.hp -= atk1
-    this.hp -= atk2
 
-    if (target.hp <= 0) {
-      target.onDie()
-    }
+    target.underAttack(atk1)
+    this.underAttack(atk2)
+  }
 
+  underAttack(damage) {
+    this.hp -= damage
     if (this.hp <= 0) {
       this.onDie()
+    } else {
+      this.emit(CardEventEnum.afterAttack)
     }
   }
 
@@ -134,6 +137,13 @@ export class Card extends EffectTarget {
     console.log(`${this.player.name} ${this.name}死亡`)
 
     this.emit(CardEventEnum.onDie)
+  }
+
+  underRecover(num) {
+    this.hp += num
+  }
+
+  findAroundCard() {
   }
 
 }
@@ -160,8 +170,8 @@ const map = {
     costEnergy: 1,
     firstStep: 3,
     moveStep: 1,
-    hp: 1,
-    buffList: ['DieBoomBuff,2,1'] // 死亡时对敌方旗手造成1点伤害
+    hp: 2,
+    buffList: ['DieBoomBuff', 'RecoverAfterAttackBuff'] // 死亡时对敌方旗手造成1点伤害，受到攻击存活时恢复10点hp
   },
   4: {
     name: '老兵',

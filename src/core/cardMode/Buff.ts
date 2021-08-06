@@ -1,30 +1,45 @@
 import {Buff} from '../common/Buff'
+import {Effect} from "../common/Effect";
+
 import {Card, CardEventEnum} from "./Card";
-import {AttackPlayerEffect} from "./Effect";
+import {initEffectWithName} from "./Effect";
 
-export class DieBoomBuff extends Buff {
-  damage: number
-  range: number
+import {BuffConfig} from "./buffList";
 
-  constructor([damage, range]) {
-    super('死亡爆炸');
-    this.damage = damage
-    this.range = range
+export class CardBuff extends Buff {
+  event: string
+  desc: string
+  duration: number
+
+  effectList: Effect[]
+
+  constructor(config: BuffConfig) {
+    const {name, desc, effects, event, duration} = config
+    super(name);
+    this.event = event
+    this.desc = desc
+    this.duration = duration || Infinity // Infinity表示永久
+
+    this.effectList = effects.map(({name, args}) => {
+      return initEffectWithName(name, args)
+    })
   }
 
   install(target: Card) {
-    target.on(CardEventEnum.onDie, () => {
+    target.on(CardEventEnum[this.event], () => {
       this.work(target)
+    })
+
+    target.on(CardEventEnum.onUpdate, () => {
+      this.duration--
+      if (this.duration <= 0) {
+        target.removeBuff(this)
+      }
     })
   }
 
   getEffects() {
-    return [
-      new AttackPlayerEffect([this.damage])
-    ]
+    return this.effectList
   }
 }
 
-export const buffMap = {
-  DieBoomBuff
-}
