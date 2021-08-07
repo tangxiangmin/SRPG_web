@@ -6,20 +6,32 @@ import {CardSkill} from "./Skill";
 
 import {CardBuff} from './Buff'
 
-import {getBuffConfigByKey} from './buffList'
+import {getCardConfigByKey} from './cardList'
+import {getTransitionRawChildren} from "vue";
 
 
 export enum CardEventEnum {
-  onMove,
-  onPut,
+  moveEnd,
+  afterPut,
   onDie,
+  beforeAttack,
   afterAttack,
   onUpdate
 }
 
+enum CardType {
+  unit, // 单元
+  skill, // 技能
+  construct // 建筑
+}
+
 export class Card extends EffectTarget {
+  id: number
   player: Player
   chessboard: CardChessboard
+  cardType: CardType
+
+  target: Card // 敌方
 
   name: string
   costEnergy: number
@@ -31,15 +43,16 @@ export class Card extends EffectTarget {
 
   constructor(props) {
     super(props)
-    const {name, costEnergy, firstStep, moveStep, hp} = props
+    const {id, name, costEnergy, firstStep, moveStep, hp} = props
 
+    this.id = id
     this.hp = hp
     this.name = name
     this.costEnergy = costEnergy
     this.firstStep = firstStep
     this.moveStep = moveStep
 
-    this.on(CardEventEnum.onPut, () => {
+    this.on(CardEventEnum.afterPut, () => {
       // todo 一些特殊技能
       console.log(`${this.player.name} ${this.name}打出`)
     })
@@ -52,62 +65,96 @@ export class Card extends EffectTarget {
   }
 
   initPassivityBuff(buffList) {
-    buffList.forEach(key => {
-      const config = getBuffConfigByKey(key)
+    buffList.forEach(config => {
       const buff = new CardBuff(config)
       this.addBuff(buff)
     })
   }
 
   // 是否能够继续
-  checkMove(nextPos) {
+  moveTo(nextPos) {
     const target = this.chessboard.getCardByPos(nextPos.x, nextPos.y)
-    if (target && target.player !== this.player) {
-      this.attackCard(target)
-      return true
+
+    const moveEnd = () => {
+      this.x = nextPos.x
+      this.y = nextPos.y
+
+      this.emit(CardEventEnum.moveEnd)
     }
 
-    // 到达敌人目标地址，攻击player
-    if (
+    if (!target) {
+      // 对应位置可以直接占据
+      moveEnd()
+    } else if (target && target.player !== this.player) {
+      // 对应位置是敌方棋子
+      this.attackCard(target)
+      moveEnd()
+    } else if (
       (this.player.dir === 1 && nextPos.x >= this.chessboard.row) ||
       (this.player.dir === -1 && nextPos.x < 0)
     ) {
-
+      // 到达敌人目标地址，攻击player
       this.attackPlayer(this.hp)
       this.onDie()
       return false
     }
-
-    return !target
   }
 
-  // 根据分组处理移动方向
-  async move(num) {
-    const val = Math.abs(num)
+  private getMoveForwardPos() {
     let unit = this.player.dir
-    for (let i = 0; i < val; ++i) {
-      await sleep(400)
-      const next = {
-        x: this.x + unit,
-        y: this.y
-      }
-      if (!this.checkMove(next)) {
-        return
-      }
-      this.x = next.x
-
-      this.emit(CardEventEnum.onMove)
+    return {
+      x: this.x + unit,
+      y: this.y
     }
   }
 
-  moveFirst() {
-    this.move(this.firstStep)
+  // 像前移动
+  async moveForward(num) {
+    const val = Math.abs(num)
+    for (let i = 0; i < val; ++i) {
+      const next = this.getMoveForwardPos()
+
+      this.moveTo(next)
+      await sleep(400)
+    }
   }
 
-  moveForward() {
-    this.move(this.moveStep)
+  findAroundPosExpectBehind() {
+    const list = this.chessboard.findAroundPos(this.x, this.y, false)
+    return list.filter((cell) => {
+      if (this.player.dir > 0) {
+        return cell.x >= this.x
+      } else {
+        return cell.x <= this.x
+      }
+    })
   }
 
+  async moveFirst() {
+    const findAttackTarget = () => {
+      const postList = this.findAroundPosExpectBehind()
+      for (const cell of postList) {
+        const {x, y} = cell
+        const target = this.chessboard.getCardByPos(x, y)
+        if (target && target.player !== this.player)
+          return target
+      }
+    }
+
+    await sleep(400)
+
+    for (let i = 0; i < this.firstStep; ++i) {
+      const target = findAttackTarget()
+      let next
+      if (!target) {
+        await this.moveForward(1)
+      } else {
+        // 移动到对应目标位置，然后执行攻击
+        await this.moveTo({x: target.x, y: target.y})
+        await sleep(400)
+      }
+    }
+  }
 
   attackPlayer(damage) {
     const enemy = this.chessboard.findPlayerEnemy(this.player)
@@ -115,8 +162,11 @@ export class Card extends EffectTarget {
   }
 
   attackCard(target: Card) {
-    const atk1 = this.hp
-    const atk2 = target.hp
+    this.target = target
+    this.emit(CardEventEnum.beforeAttack)
+
+    const atk1 = Math.max(this.hp, 0)
+    const atk2 = Math.max(target.hp, 0)
 
     target.underAttack(atk1)
     this.underAttack(atk2)
@@ -140,50 +190,14 @@ export class Card extends EffectTarget {
   }
 
   underRecover(num) {
+    console.log(`${this.name} 受到治疗`)
     this.hp += num
   }
-
-  findAroundCard() {
-  }
-
 }
 
 // 配置的一些卡片
-// todo 这里写个脚本来随机生成一些有趣的卡片
-const map = {
-  1: {
-    name: '新兵',
-    costEnergy: 1,
-    firstStep: 1,
-    moveStep: 1,
-    hp: 1
-  },
-  2: {
-    name: '传令兵',
-    costEnergy: 2,
-    firstStep: 2,
-    moveStep: 1,
-    hp: 2
-  },
-  3: {
-    name: '斥候',
-    costEnergy: 1,
-    firstStep: 3,
-    moveStep: 1,
-    hp: 2,
-    buffList: ['DieBoomBuff', 'RecoverAfterAttackBuff'] // 死亡时对敌方旗手造成1点伤害，受到攻击存活时恢复10点hp
-  },
-  4: {
-    name: '老兵',
-    costEnergy: 3,
-    firstStep: 1,
-    moveStep: 1,
-    hp: 5
-  }
-}
-
 function createCardById(id: number): Card {
-  const config = map[id]
+  const config = getCardConfigByKey(id)
   return new Card(config)
 }
 
@@ -197,16 +211,28 @@ export class CardFactory {
   }
 
   // 随机生成times张牌
-  drawCards(times: number) {
-    return this.cardGroup.sort(() => {
-      return .5 - Math.random();
-    }).slice(0, times).map(cardId => {
-      // 根据cardId创建卡片
+  drawCards(times: number, except: number[]) {
+    const exceptList = [...except]
+    const ans = []
+
+    const drawCard = (except) => {
+      const list = this.cardGroup
+      // .filter(id => !except.includes(id))
+
+      const randomIdx = Math.floor(Math.random() * list.length)
+      const cardId = list[randomIdx]
       let card = createCardById(cardId)
       // 保存记录
       this.drawRecord.push(card)
       return card
-    })
+    }
+    for (let i = 0; i < times; ++i) {
+      const card = drawCard(except)
+      exceptList.push(card.id)
+
+      ans.push(card)
+    }
+    return ans
   }
 }
 

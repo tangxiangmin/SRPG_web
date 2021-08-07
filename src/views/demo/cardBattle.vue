@@ -2,6 +2,7 @@
 
 
   <div class="page">
+
     <button @click="chessboard.toggleRound">切换</button>
 
     <div>
@@ -29,7 +30,7 @@
 
 <script>
 
-import {Player} from '../../core/cardMode/Player'
+import {AIPlayer, Player} from '../../core/cardMode/Player'
 import {CardChessboard} from '../../core/cardMode/CardChessboard'
 import {computed, reactive} from "vue";
 import CardCell from './card.vue'
@@ -41,8 +42,8 @@ export default {
 
     const chessboard = new CardChessboard()
 
-    const p1 = new Player({name: 'p1', cardGroup: [ 3], dir: -1})
-    const p2 = new Player({name: 'p2', cardGroup: [1], dir: 1})
+    const p1 = new Player({name: 'p1', cardGroup: [2,3,6], dir: -1})
+    const p2 = new AIPlayer({name: 'p2', cardGroup: [1,], dir: 1})
 
     chessboard.addPlayer(p1)
     chessboard.addPlayer(p2)
@@ -79,11 +80,12 @@ export default {
   margin: 0 auto;
 
 }
+
 .row {
   display: flex;
 
   &-available .cell {
-    background: rgba(127,255,170, 0.1);
+    background: rgba(127, 255, 170, 0.1);
   }
 }
 

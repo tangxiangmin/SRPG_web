@@ -1,6 +1,6 @@
 import {Effect} from "../common/Effect";
 import {Card} from "./Card";
-import { createPositionBuffConfig} from './buffList'
+import {createPositionBuffConfig} from './buffList'
 import {CardBuff} from "./Buff";
 
 export class AttackPlayerEffect implements Effect {
@@ -34,8 +34,20 @@ export class DamageEffect implements Effect {
     this.num = args[0]
   }
 
-  cast(target: Card) {
-    target.underAttack(this.num)
+  cast(card: Card) {
+    card.target.underAttack(this.num)
+  }
+}
+
+export class DamageSelfEffect implements Effect {
+  num: number
+
+  constructor(args) {
+    this.num = args[0]
+  }
+
+  cast(card: Card) {
+    card.underAttack(this.num)
   }
 }
 
@@ -51,7 +63,7 @@ export class DieRandomPoisoningEffect implements Effect {
   }
 
   cast(target: Card) {
-    const list = target.chessboard.findAroundCard(target.x, target.y)
+    const list = target.chessboard.findAroundCard(target.x, target.y, true)
 
     // 找到随机两个目标
     const ans = list.slice(0, 2)
@@ -66,12 +78,41 @@ export class DieRandomPoisoningEffect implements Effect {
   }
 }
 
+// 在指定位置召唤
+export class SpawnEffect implements Effect {
+  pos: string
+  spawnChessConfig: any
+
+  constructor(args) {
+    this.pos = args[0]
+    this.spawnChessConfig = args[1]
+  }
+
+  cast(target: Card) {
+    const card = new Card(this.spawnChessConfig)
+
+    card.costEnergy = 0
+
+    const {player, chessboard} = target
+
+    const pos = {
+      x: target.x - player.dir,
+      y: target.y
+    }
+
+    player.selectCard(card)
+    chessboard.putCard(pos.x, pos.y)
+  }
+}
+
 // 根据配置名字和构造参数生成effect实例
 const effectMap = {
   AttackPlayerEffect,
   RecoverEffect,
   DamageEffect,
-  DieRandomPoisoningEffect
+  DamageSelfEffect,
+  DieRandomPoisoningEffect,
+  SpawnEffect
 }
 
 export function initEffectWithName(name: string, args: any[]): Effect {

@@ -1,4 +1,4 @@
-import {Player} from "./Player";
+import {AIPlayer, Player} from "./Player";
 import {Card, CardEventEnum} from "./Card";
 
 export class CardChessboard {
@@ -33,13 +33,13 @@ export class CardChessboard {
       return
     }
 
-    this.currentPlayer.putCard(card)
 
     card.chessboard = this
 
     card.x = x
     card.y = y
 
+    this.currentPlayer.putCard(card)
 
     this.cardList.push(card)
 
@@ -47,9 +47,11 @@ export class CardChessboard {
       this.getCurrentPlayerPutRange()
     })
 
-    card.on(CardEventEnum.onMove, () => {
+    card.on(CardEventEnum.moveEnd, () => {
       this.getCurrentPlayerPutRange()
     })
+
+    card.emit(CardEventEnum.afterPut)
 
     card.moveFirst()
 
@@ -61,7 +63,7 @@ export class CardChessboard {
   }
 
 
-  toggleRound() {
+  async toggleRound() {
     let idx = this.playerList.indexOf(this.currentPlayer)
     let nextIdx = idx + 1 >= this.playerList.length ? 0 : idx + 1
 
@@ -71,13 +73,13 @@ export class CardChessboard {
 
     const list = this.getPlayerChessList(this.currentPlayer)
     for (const card of list) {
-      card.moveForward()
+      card.moveForward(card.moveStep)
     }
 
     this.getCurrentPlayerPutRange()
 
-    // todo 临时测试
-    if (this.currentPlayer.name === 'p2') {
+    // 自动测试
+    if (this.currentPlayer instanceof AIPlayer) {
       this.autoPlay()
     }
   }
@@ -95,8 +97,8 @@ export class CardChessboard {
   }
 
   // 找到指定坐标周围的棋子
-  findAroundCard(x, y): Card[] {
-    const list = this.findAroundPos(x, y)
+  findAroundCard(x, y, diagonal ): Card[] {
+    const list = this.findAroundPos(x, y, diagonal)
     let ans: Card[] = []
     list.forEach(({x, y}) => {
       let card = this.getCardByPos(x, y)
@@ -108,7 +110,8 @@ export class CardChessboard {
     return ans
   }
 
-  private findAroundPos(x, y): { x: number, y: number }[] {
+  // 找到周围的坐标
+  findAroundPos(x: number, y: number, diagonal: boolean): { x: number, y: number }[] {
     const {row, col} = this
 
     let ans = []
@@ -118,14 +121,15 @@ export class CardChessboard {
     }
 
     // 找到周围的单元格
+    // IMPORTANT 注意此处顺序，先是上面，再是左边，然后是右边，最后是后面，部分逻辑如攻击选择目标依赖该顺序
     insert(x - 1, y)
-    insert(x + 1, y)
+    diagonal && insert(x - 1, y - 1)
+    diagonal && insert(x - 1, y + 1)
     insert(x, y - 1)
     insert(x, y + 1)
-    insert(x - 1, y - 1)
-    insert(x + 1, y - 1)
-    insert(x - 1, y + 1)
-    insert(x + 1, y + 1)
+    insert(x + 1, y)
+    diagonal && insert(x + 1, y - 1)
+    diagonal && insert(x + 1, y + 1)
 
     return ans
   }

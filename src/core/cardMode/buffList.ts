@@ -6,6 +6,12 @@ export interface BuffConfig {
   duration: number
 }
 
+export function createBuffConfig(name, desc, event, duration, effects): BuffConfig {
+  return {
+    name, desc, event, duration, effects
+  }
+}
+
 export function createPositionBuffConfig(damage, duration): BuffConfig {
   return {
     name: '中毒',

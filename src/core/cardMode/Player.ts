@@ -42,7 +42,8 @@ export class Player {
     const num = this.maxCardNum - this.cardList.length
 
     if (num > 0) {
-      const cards = this.cardFactory.drawCards(num)
+      const expect = this.cardList.map(card => card.id)
+      const cards = this.cardFactory.drawCards(num, expect)
       this.cardList = [...this.cardList, ...cards]
     }
   }
@@ -54,11 +55,14 @@ export class Player {
 
   // 打出一张牌
   putCard(card: Card) {
-    card.player = this
     this.energy -= card.costEnergy
+    card.player = this
     this.currentCard = null
     this.cardList = this.cardList.filter(c => c !== card)
-
-    card.emit(CardEventEnum.onPut)
   }
+}
+
+
+export class AIPlayer extends Player {
+
 }
