@@ -2,7 +2,7 @@ import * as VueRouter from "vue-router";
 
 import Index from '../views/index.vue'
 import Demo from '../views/demo/index.vue'
-import CardBattle from '../views/demo/cardBattle.vue'
+import CardBattle from '../views/cardBattle/index.vue'
 import ConfigMap from '../views/config/map.vue'
 // @ts-ignore
 import ConfigChess from '../views/config/chess.vue'

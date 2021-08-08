@@ -7,9 +7,10 @@ npm i
 npm run dev
 ```
 
-## 基础元素
 
 
+## 相关开发文档
+* [一种易扩展游戏技能系统的实现方案](https://www.shymean.com/article/%E4%B8%80%E7%A7%8D%E6%98%93%E6%89%A9%E5%B1%95%E6%B8%B8%E6%88%8F%E6%8A%80%E8%83%BD%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88)
 
 ## 一些设定
 

@@ -105,6 +105,24 @@ export class SpawnEffect implements Effect {
   }
 }
 
+// 对周围造成伤害
+export class AroundDamageEffect implements Effect {
+  damage: number
+
+  constructor(args) {
+    this.damage = args[0]
+  }
+
+  cast(target: Card) {
+    const list = target.chessboard.findAroundCard(target.x, target.y, true)
+    for (const card of list) {
+      if (card.player !== target.player) {
+        card.underAttack(this.damage)
+      }
+    }
+  }
+}
+
 // 根据配置名字和构造参数生成effect实例
 const effectMap = {
   AttackPlayerEffect,
@@ -112,7 +130,8 @@ const effectMap = {
   DamageEffect,
   DamageSelfEffect,
   DieRandomPoisoningEffect,
-  SpawnEffect
+  SpawnEffect,
+  AroundDamageEffect
 }
 
 export function initEffectWithName(name: string, args: any[]): Effect {

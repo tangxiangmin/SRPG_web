@@ -1,5 +1,6 @@
 import {AIPlayer, Player} from "./Player";
 import {Card, CardEventEnum} from "./Card";
+import {getTransitionRawChildren} from "vue";
 
 export class CardChessboard {
   currentPlayer: Player
@@ -21,10 +22,11 @@ export class CardChessboard {
   addPlayer(player) {
     if (!this.playerList.includes(player)) {
       this.playerList.push(player)
+      player.chessboard = this
     }
   }
 
-  putCard(x, y) {
+  async putCard(x, y) {
     const card = this.currentPlayer.currentCard
     if (!card) return
 
@@ -53,7 +55,8 @@ export class CardChessboard {
 
     card.emit(CardEventEnum.afterPut)
 
-    card.moveFirst()
+    await card.moveFirst()
+
 
     this.getCurrentPlayerPutRange()
   }
@@ -78,9 +81,9 @@ export class CardChessboard {
 
     this.getCurrentPlayerPutRange()
 
-    // 自动测试
+    // 自动托管
     if (this.currentPlayer instanceof AIPlayer) {
-      this.autoPlay()
+      await this.currentPlayer.autoPlay()
     }
   }
 
@@ -146,14 +149,6 @@ export class CardChessboard {
       const min = Math.max(1, Math.min(...arr, this.row - 1))
       return [min, this.row - 1]
     }
-  }
-
-  // todo 这里需要设计比较灵活的AI https://www.xqbase.com/index.htm
-  private autoPlay() {
-    this.currentPlayer.selectCard(this.currentPlayer.cardList[0])
-    // 随便放个位置
-    this.putCard(0, 0)
-    this.toggleRound()
   }
 
   private getPlayerChessList(player) {
