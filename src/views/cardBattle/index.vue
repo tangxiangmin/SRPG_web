@@ -1,7 +1,9 @@
 <template>
   <div class="page">
 
-    <div class="btn-round" @click="chessboard.toggleRound">结束回合</div>
+    <button class="btn-round" @click="chessboard.toggleRound">结束回合</button>
+    <button class="btn-refresh" @click="currentPlayer.refreshCard" :disabled="currentPlayer.hasRefreshCard">重抽一张
+    </button>
 
     <div class="status-bar">
       <div class="status-bar_l">
@@ -13,12 +15,13 @@
     </div>
 
     <div class="chessboard">
-      <div class="row" v-for="(row,x) in chessboard.row" :key="x"
-           :class="{'row-available':putRange[0] <= x && putRange[1] >=x}">
+      <div class="row" v-for="(row,x) in chessboard.row" :key="x">
         <div class="cell" v-for="(col,y) in chessboard.col" :x="x" :y="y" @click="onCellClick(x,y)">
           <CardCell :card="chessboard.getCardByPos(x, y)"></CardCell>
         </div>
       </div>
+      <div :class="[isSelfRound ? 'available-range' : 'available-range-2']"
+           :style="{'height':(putRange[1] - putRange[0] + 1) / chessboard.row*100+'%'}"></div>
     </div>
 
 
@@ -30,7 +33,7 @@
         energy: {{ chessboard.playerList[0].energy }}
       </div>
     </div>
-    <div>
+    <div v-if="currentPlayer === chessboard.playerList[0]">
       <div class="card-list">
         <Card class="card"
               :class="{
@@ -43,20 +46,6 @@
 
         </Card>
       </div>
-
-      <!--      <button v-for="card in currentPlayer?.cardList" :disabled="card.costEnergy > currentPlayer.energy"-->
-      <!--              @click="currentPlayer.selectCard(card)">-->
-      <!--        {{ card.name }}-->
-      <!--      </button>-->
-    </div>
-
-    <div>
-      <div>
-        当前卡组
-      </div>
-      <button v-for="card in currentPlayer?.cardFactory.cardGroup">
-        {{ card }}
-      </button>
     </div>
   </div>
 </template>
@@ -76,8 +65,9 @@ export default {
 
     const chessboard = new CardChessboard()
 
-    const p1 = new Player({name: 'p1', cardGroup: [1, 2, 3, 4, 5, 6], dir: -1})
-    const p2 = new AIPlayer({name: 'p2', cardGroup: [1,], dir: 1})
+    // const p1 = new Player({name: 'p1', cardGroup: [1, 2, 3, 4, 5, 6,8], dir: -1})
+    const p1 = new Player({name: 'p1', cardGroup: [1, 2, 9], dir: -1})
+    const p2 = new AIPlayer({name: 'p2', cardGroup: [1, 2], dir: 1})
 
     chessboard.addPlayer(p1)
     chessboard.addPlayer(p2)
@@ -94,12 +84,17 @@ export default {
       return instance.putRange
     })
 
+    const isSelfRound = computed(() => {
+      return instance.currentPlayer === instance.playerList[0]
+    })
+
     const onCellClick = (x, y) => {
       instance.putCard(x, y)
     }
 
     return {
       chessboard: instance,
+      isSelfRound,
       currentPlayer,
       onCellClick,
       putRange
@@ -116,21 +111,27 @@ $width: 500px;
   margin: 0 auto;
 }
 
-.btn-round {
+%side-btn {
   cursor: pointer;
   position: absolute;
   border: 1px solid #000;
   right: -100px;
-  top: 400px;
   padding: 10px;
+}
+
+.btn-round {
+  @extend %side-btn;
+  top: 400px;
+
+}
+
+.btn-refresh {
+  @extend %side-btn;
+  top: 460px;
 }
 
 .row {
   display: flex;
-
-  &-available .cell {
-    background: rgba(127, 255, 170, 0.1);
-  }
 }
 
 $cell-size: $width/ 4;
@@ -151,6 +152,7 @@ $cell-size: $width/ 4;
 
 
 .chessboard {
+  position: relative;
   width: $width;
   margin: 0 auto;
 }
@@ -183,6 +185,28 @@ $cell-size: $width/ 4;
       background-color: #dedede;
     }
   }
-
 }
+
+%available-range {
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+}
+
+.available-range {
+  @extend %available-range;
+  bottom: 0;
+  $color: blue;
+  border-top: 1px solid $color;
+  border-right: 1px solid $color;
+}
+
+.available-range-2 {
+  @extend %available-range;
+  top: 0;
+  $color: red;
+  border-left: 1px solid $color;
+  border-bottom: 1px solid $color;
+}
+
 </style>

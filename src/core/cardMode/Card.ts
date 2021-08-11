@@ -7,7 +7,6 @@ import {CardSkill} from "./Skill";
 import {CardBuff} from './Buff'
 
 import {getCardConfigByKey} from './cardList'
-import {getTransitionRawChildren} from "vue";
 
 
 export enum CardEventEnum {
@@ -19,7 +18,7 @@ export enum CardEventEnum {
   onUpdate
 }
 
-enum CardType {
+export enum CardType {
   unit, // 单元
   skill, // 技能
   construct // 建筑
@@ -43,19 +42,16 @@ export class Card extends EffectTarget {
 
   constructor(props) {
     super(props)
-    const {id, name, costEnergy, firstStep, moveStep, hp} = props
+    const {id, name, costEnergy, firstStep, moveStep, hp, cardType = CardType.unit} = props
 
     this.id = id
     this.hp = hp
+    this.cardType = cardType
+
     this.name = name
     this.costEnergy = costEnergy
     this.firstStep = firstStep
     this.moveStep = moveStep
-
-    this.on(CardEventEnum.afterPut, () => {
-      // todo 一些特殊技能
-      console.log(`${this.player.name} ${this.name}打出`)
-    })
   }
 
   initSkillList(skillList: string[]) {
@@ -73,7 +69,15 @@ export class Card extends EffectTarget {
 
   // 是否能够继续
   moveTo(nextPos) {
-    const target = this.chessboard.getCardByPos(nextPos.x, nextPos.y)
+    if (
+      (this.player.dir === 1 && nextPos.x >= this.chessboard.row) ||
+      (this.player.dir === -1 && nextPos.x < 0)
+    ) {
+      // 到达敌人目标地址，攻击player
+      this.attackPlayer(this.hp)
+      this.onDie()
+      return false
+    }
 
     const moveEnd = () => {
       this.x = nextPos.x
@@ -82,6 +86,8 @@ export class Card extends EffectTarget {
       this.emit(CardEventEnum.moveEnd)
     }
 
+    const target = this.chessboard.getCardByPos(nextPos.x, nextPos.y)
+
     if (!target) {
       // 对应位置可以直接占据
       moveEnd()
@@ -89,14 +95,6 @@ export class Card extends EffectTarget {
       // 对应位置是敌方棋子
       this.attackCard(target)
       moveEnd()
-    } else if (
-      (this.player.dir === 1 && nextPos.x >= this.chessboard.row) ||
-      (this.player.dir === -1 && nextPos.x < 0)
-    ) {
-      // 到达敌人目标地址，攻击player
-      this.attackPlayer(this.hp)
-      this.onDie()
-      return false
     }
   }
 
@@ -216,8 +214,8 @@ export class CardFactory {
     const ans = []
 
     const drawCard = (except) => {
-      const list = this.cardGroup
-      // .filter(id => !except.includes(id))
+      const list = this.cardGroup.filter(id => !except.includes(id))
+      if (!list.length) return
 
       const randomIdx = Math.floor(Math.random() * list.length)
       const cardId = list[randomIdx]
@@ -228,9 +226,11 @@ export class CardFactory {
     }
     for (let i = 0; i < times; ++i) {
       const card = drawCard(except)
-      exceptList.push(card.id)
 
-      ans.push(card)
+      if (card) {
+        exceptList.push(card.id)
+        ans.push(card)
+      }
     }
     return ans
   }

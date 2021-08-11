@@ -85,7 +85,7 @@ export class SpawnEffect implements Effect {
 
   constructor(args) {
     this.pos = args[0]
-    this.spawnChessConfig = args[1]
+    this.spawnChessConfig = args[1] || {}
   }
 
   cast(target: Card) {

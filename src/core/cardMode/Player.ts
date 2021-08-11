@@ -19,26 +19,31 @@ export class Player {
   currentCard: Card
 
   chessboard: CardChessboard
+  hasRefreshCard: boolean = false
 
   constructor({name, cardGroup, dir}) {
     this.name = name
     this.dir = dir
 
     this.cardFactory = new CardFactory(cardGroup)
-    this.drawCard()
+    this.drawFillCard()
   }
 
 
   onRoundStart() {
+    this.hasRefreshCard = false
     this.maxEnergy += 1
     this.energy = this.maxEnergy
-    this.drawCard()
+    this.drawFillCard()
   }
 
-  // 随机补满手牌
-  drawCard() {
-    const num = this.maxCardNum - this.cardList.length
+  // 补满卡牌
+  drawFillCard(){
+    this.drawCard(this.maxCardNum - this.cardList.length)
+  }
 
+  // 抽取指定数量的卡片
+  drawCard(num:number) {
     if (num > 0) {
       const expect = this.cardList.map(card => card.id)
       const cards = this.cardFactory.drawCards(num, expect)
@@ -48,9 +53,6 @@ export class Player {
 
   // 选择卡片
   selectCard(card) {
-    if (card.costEnergy > this.energy) {
-      return
-    }
     this.currentCard = card
   }
 
@@ -60,6 +62,58 @@ export class Player {
     card.player = this
     this.currentCard = null
     this.cardList = this.cardList.filter(c => c !== card)
+  }
+
+  // 丢弃当前牌，重新抽一张
+  refreshCard(){
+    if(this.hasRefreshCard) return // 同一回合只能重选一张
+
+    this.cardList = this.cardList.filter(c => c !== this.currentCard)
+    this.currentCard = null
+    this.hasRefreshCard = true
+
+    this.drawCard(1)
+  }
+}
+
+// 背包获取，在有限容量内获取价值最大的组合
+function knapsack(capacity, list, index, path) {
+  if (index < 0 || capacity <= 0) {
+    return {
+      val: 0,
+      path: path,
+    };
+  }
+
+  if (list[index].size > capacity) {
+    return knapsack(capacity, list, index - 1, path);
+  }
+  const {value, size} = list[index];
+  const cur = value;
+  const {val: nextContainCur, path: nextContainPath} = knapsack(
+    capacity - size,
+    list,
+    index - 1,
+    path
+  );
+
+  const {val: nextIgnoreCur, path: nextIgnorePath} = knapsack(
+    capacity,
+    list,
+    index - 1,
+    path
+  );
+
+  if (cur + nextContainCur > nextIgnoreCur) {
+    return {
+      val: cur + nextContainCur,
+      path: [...nextContainPath, index],
+    };
+  } else {
+    return {
+      val: nextIgnoreCur,
+      path: nextIgnorePath,
+    };
   }
 }
 
@@ -85,26 +139,53 @@ export class AIPlayer extends Player {
     return this.dir > 0 ? list[0] : list[list.length - 1]
   }
 
-  calcCurrentCard() {
-    const list = this.cardList.filter(card => card.costEnergy <= this.energy)
-    return list[0]
+  // 计算某张卡牌的权重
+  calcCardWeight(card: Card) {
+    const {chessboard} = this
+    const {putRange, col} = chessboard
+    const {costEnergy, hp, firstStep} = card
+    let weight = 1
+
+    weight += hp
+    weight += firstStep
+
+    // 背包问题选择可以打出的卡片
+    return {
+      value: weight,
+      size: costEnergy,
+      card
+    }
+  }
+
+  choosePutCardList(): Card[] {
+    const listWithWeight = this.cardList
+      .filter(card => card.costEnergy <= this.energy)
+      .map(card => this.calcCardWeight(card))
+
+    const {path} = knapsack(this.energy, listWithWeight, listWithWeight.length - 1, [])
+
+    // 返回对应的卡牌列表
+    return path.map(idx=>{
+      return listWithWeight[idx].card
+    })
+    // 计算卡牌的权重值
   }
 
   async autoPlay() {
     const {chessboard} = this
     // 选出一张合适的牌
-    let card = this.calcCurrentCard()
-    while (card) {
-      // 选择一个合适的位置
+
+    let cards = this.choosePutCardList()
+    let card
+    while (card = cards.shift()) {
+      // todo 选择一个合适的位置
+      // 解决办法，对于每张卡牌，每个可放置的单元格都计算一个权重值
       const cell = this.calcCurrentPos(card)
       if (!cell) break
 
       // 打牌
       this.selectCard(card)
       await chessboard.putCard(cell.x, cell.y)
-
-      // 重新选择直至无法出牌
-      card = this.calcCurrentCard()
     }
 
     // 随便放个位置

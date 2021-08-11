@@ -1,6 +1,5 @@
 import {AIPlayer, Player} from "./Player";
-import {Card, CardEventEnum} from "./Card";
-import {getTransitionRawChildren} from "vue";
+import {Card, CardEventEnum, CardType} from "./Card";
 
 export class CardChessboard {
   currentPlayer: Player
@@ -29,6 +28,12 @@ export class CardChessboard {
   async putCard(x, y) {
     const card = this.currentPlayer.currentCard
     if (!card) return
+    if (card.costEnergy > this.currentPlayer.energy) return
+
+    if (card.cardType === CardType.skill) {
+      this.useSkillCard(card, this.getCardByPos(x, y))
+      return
+    }
 
     // 不再对应范围内
     if (this.putRange[0] > x || this.putRange[1] < x) {
@@ -53,12 +58,16 @@ export class CardChessboard {
       this.getCurrentPlayerPutRange()
     })
 
-    card.emit(CardEventEnum.afterPut)
-
     await card.moveFirst()
 
+    card.emit(CardEventEnum.afterPut)
 
     this.getCurrentPlayerPutRange()
+  }
+
+  useSkillCard(card, target) {
+    const skill = card.skillList[0]
+    card.useSkill(skill, target)
   }
 
   removeCard(card) {
@@ -84,6 +93,7 @@ export class CardChessboard {
     // 自动托管
     if (this.currentPlayer instanceof AIPlayer) {
       await this.currentPlayer.autoPlay()
+      // this.toggleRound()
     }
   }
 
@@ -100,7 +110,7 @@ export class CardChessboard {
   }
 
   // 找到指定坐标周围的棋子
-  findAroundCard(x, y, diagonal ): Card[] {
+  findAroundCard(x, y, diagonal): Card[] {
     const list = this.findAroundPos(x, y, diagonal)
     let ans: Card[] = []
     list.forEach(({x, y}) => {
