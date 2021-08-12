@@ -11,11 +11,13 @@ import {getCardConfigByKey} from './cardList'
 
 export enum CardEventEnum {
   moveEnd,
+  beforePut,
   afterPut,
   onDie,
   beforeAttack,
   afterAttack,
-  onUpdate
+  onUpdate,
+  onLastPut, // 作为最后一张牌打出
 }
 
 export enum CardType {
@@ -172,6 +174,7 @@ export class Card extends EffectTarget {
 
   underAttack(damage) {
     this.hp -= damage
+    console.log('underAttack')
     if (this.hp <= 0) {
       this.onDie()
     } else {
@@ -225,7 +228,8 @@ export class CardFactory {
       return card
     }
     for (let i = 0; i < times; ++i) {
-      const card = drawCard(except)
+      const card = drawCard(exceptList)
+
 
       if (card) {
         exceptList.push(card.id)

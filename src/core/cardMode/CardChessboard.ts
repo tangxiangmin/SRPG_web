@@ -58,9 +58,18 @@ export class CardChessboard {
       this.getCurrentPlayerPutRange()
     })
 
+    card.emit(CardEventEnum.beforePut)
+
+    // 最后一张牌打出, todo是否可以拆分到afterPut的方法中
+    if (!this.currentPlayer.cardList.length) {
+      console.log('last')
+      card.emit(CardEventEnum.onLastPut)
+    }
+
     await card.moveFirst()
 
     card.emit(CardEventEnum.afterPut)
+
 
     this.getCurrentPlayerPutRange()
   }
@@ -85,7 +94,8 @@ export class CardChessboard {
 
     const list = this.getPlayerChessList(this.currentPlayer)
     for (const card of list) {
-      card.moveForward(card.moveStep)
+      card.emit(CardEventEnum.onUpdate)
+      await card.moveForward(card.moveStep)
     }
 
     this.getCurrentPlayerPutRange()
@@ -161,7 +171,7 @@ export class CardChessboard {
     }
   }
 
-  private getPlayerChessList(player) {
+  getPlayerChessList(player) {
     return this.cardList.filter(card => card.player === player)
   }
 }

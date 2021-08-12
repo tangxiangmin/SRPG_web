@@ -2,6 +2,7 @@ import {Effect} from "../common/Effect";
 import {Card} from "./Card";
 import {createPositionBuffConfig} from './buffList'
 import {CardBuff} from "./Buff";
+import {randomPick} from "./util";
 
 export class AttackPlayerEffect implements Effect {
   damage: number
@@ -123,6 +124,56 @@ export class AroundDamageEffect implements Effect {
   }
 }
 
+enum TargetEnum {
+  friend = 0,
+  enemy = 1
+}
+
+// 治疗周围单位
+export class AroundRecoverEffect implements Effect {
+  num: number
+  target: TargetEnum // 0己方 1 对手
+  constructor(args) {
+    this.num = args[0]
+    this.target = args[1]
+  }
+
+  cast(target: Card) {
+    const list = target.chessboard.findAroundCard(target.x, target.y, true).filter(card => {
+      const isCur = card.player === target.player
+      return card !== target && this.target === TargetEnum.friend ? isCur : !isCur
+    })
+
+    if (list.length) {
+      const card = randomPick(list)
+      card.underRecover(this.num)
+    }
+  }
+}
+
+// 随机伤害
+export class RandomDamageEffect implements Effect {
+  damage: number
+  target: TargetEnum
+
+  constructor(args) {
+    this.damage = args[0]
+    this.target = args[1]
+  }
+
+  cast(target: Card) {
+    const player = this.target === TargetEnum.friend ? target.player : target.chessboard.findPlayerEnemy(target.player)
+    const list = target.chessboard.getPlayerChessList(player).filter(card => card !== target)
+
+    console.log(list)
+    console.log(player)
+    if (list.length) {
+      const cell = randomPick(list)
+      cell.underAttack(this.damage)
+    }
+  }
+}
+
 // 根据配置名字和构造参数生成effect实例
 const effectMap = {
   AttackPlayerEffect,
@@ -131,7 +182,9 @@ const effectMap = {
   DamageSelfEffect,
   DieRandomPoisoningEffect,
   SpawnEffect,
-  AroundDamageEffect
+  AroundDamageEffect,
+  AroundRecoverEffect,
+  RandomDamageEffect
 }
 
 export function initEffectWithName(name: string, args: any[]): Effect {

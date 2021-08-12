@@ -1,5 +1,6 @@
 import {Card, CardFactory} from './Card'
 import {CardChessboard} from "./CardChessboard";
+import {randomPick} from './util'
 
 export class Player {
   name: string
@@ -38,12 +39,12 @@ export class Player {
   }
 
   // 补满卡牌
-  drawFillCard(){
+  drawFillCard() {
     this.drawCard(this.maxCardNum - this.cardList.length)
   }
 
   // 抽取指定数量的卡片
-  drawCard(num:number) {
+  drawCard(num: number) {
     if (num > 0) {
       const expect = this.cardList.map(card => card.id)
       const cards = this.cardFactory.drawCards(num, expect)
@@ -65,8 +66,8 @@ export class Player {
   }
 
   // 丢弃当前牌，重新抽一张
-  refreshCard(){
-    if(this.hasRefreshCard) return // 同一回合只能重选一张
+  refreshCard() {
+    if (this.hasRefreshCard) return // 同一回合只能重选一张
 
     this.cardList = this.cardList.filter(c => c !== this.currentCard)
     this.currentCard = null
@@ -119,30 +120,51 @@ function knapsack(capacity, list, index, path) {
 
 // todo 这里需要设计比较灵活的AI https://www.xqbase.com/index.htm
 export class AIPlayer extends Player {
+  // 先随便写一点，假设AIPlayer都是dir === 1的，在屏幕上方
   calcCurrentPos(card: Card) {
     const {chessboard} = this
     const {putRange, col} = chessboard
 
     const [x0, x1] = putRange
     const list = []
-    for (let x = x0; x <= x1; ++x) {
+    let maxX = -1
+    for (let x = x1; x >= x0; --x) {
       for (let y = 0; y < col; ++y) {
         // 计算每个单元格和卡片的权重
         const target = chessboard.getCardByPos(x, y)
         if (!target) {
           list.push({x, y})
+          if (maxX < x) {
+            maxX = x
+          }
         }
       }
     }
 
-    // 返回第一个位置
-    return this.dir > 0 ? list[0] : list[list.length - 1]
+    const enemy = chessboard.findPlayerEnemy(this)
+    const enemyChessList = chessboard.getPlayerChessList(enemy)
+
+    if (enemyChessList) {
+      // 找到最靠近城堡且血量较低的棋子，用于消灭
+      enemyChessList.sort((a, b) => a.x - b.x || a.hp - b.hp)
+      let target
+      if (target = enemyChessList.shift()) {
+        const cell = list.find(({x, y}) => {
+          return (y === target.y && x < target.x) || (x === target.x && y === target.y - 1) || (x === target.x && y === target.y + 1)
+        })
+        if (cell) {
+          return cell
+        }
+      }
+    }
+
+    // 找不到合适的位置，则在最远的那一行随机选择一个空位放置
+    return randomPick(list.filter(({x,}) => x === maxX))
   }
 
   // 计算某张卡牌的权重
   calcCardWeight(card: Card) {
     const {chessboard} = this
-    const {putRange, col} = chessboard
     const {costEnergy, hp, firstStep} = card
     let weight = 1
 
@@ -165,7 +187,7 @@ export class AIPlayer extends Player {
     const {path} = knapsack(this.energy, listWithWeight, listWithWeight.length - 1, [])
 
     // 返回对应的卡牌列表
-    return path.map(idx=>{
+    return path.map(idx => {
       return listWithWeight[idx].card
     })
     // 计算卡牌的权重值

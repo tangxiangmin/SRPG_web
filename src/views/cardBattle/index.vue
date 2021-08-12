@@ -16,8 +16,9 @@
 
     <div class="chessboard">
       <div class="row" v-for="(row,x) in chessboard.row" :key="x">
-        <div class="cell" v-for="(col,y) in chessboard.col" :x="x" :y="y" @click="onCellClick(x,y)">
-          <CardCell :card="chessboard.getCardByPos(x, y)"></CardCell>
+        <div class="cell" v-for="(col,y) in chessboard.col" :key="y" @click="onCellClick(x,y)">
+          <!-- TODO 这里临时使用一个随机key，强制没次都进行刷新-->
+          <CardCell :card="chessboard.getCardByPos(x, y)" :key="Math.random()"></CardCell>
         </div>
       </div>
       <div :class="[isSelfRound ? 'available-range' : 'available-range-2']"
@@ -66,7 +67,7 @@ export default {
     const chessboard = new CardChessboard()
 
     // const p1 = new Player({name: 'p1', cardGroup: [1, 2, 3, 4, 5, 6,8], dir: -1})
-    const p1 = new Player({name: 'p1', cardGroup: [1, 2, 9], dir: -1})
+    const p1 = new Player({name: 'p1', cardGroup: [203, 301], dir: -1})
     const p2 = new AIPlayer({name: 'p2', cardGroup: [1, 2], dir: 1})
 
     chessboard.addPlayer(p1)
